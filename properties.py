@@ -12,7 +12,7 @@ class Properties:
             cls.__instance = super().__new__(cls)
         return cls.__instance
 
-    def has(self, property_name: str):
+    def has(self, property_name: str) -> bool:
         return property_name in self.__properties
 
     def get(self, property_name: str) -> Any:

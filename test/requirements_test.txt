@@ -1,2 +1,2 @@
-pytest
-pytest-mock
+pytest==7.1.3
+pytest-mock==3.10.0
