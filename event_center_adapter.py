@@ -1,0 +1,52 @@
+from typing import Callable
+
+from flask import Flask, request
+
+from core import Event
+from network import FlaskAppRunner, APICaller
+from properties import Properties
+from service import EventReceiver, RegistrationData
+
+CALLBACK_ENDPOINT = '/on_event'
+
+
+class EventCenterAdapter(FlaskAppRunner):
+    def __init__(self, event_handler: Callable):
+        self.event_handler = event_handler
+        self.event_center_url = Properties().get('EVENT_CENTER_URL')
+        host = Properties().get('EVENT_CENTER_CALLBACK_HOST')
+        port = Properties().get('EVENT_CENTER_CALLBACK_PORT')
+
+        name = f'{__class__.__name__}:{port}'
+        self.url = f'{host}:{port}'
+        callback_url = f'{self.url}{CALLBACK_ENDPOINT}'
+        self.event_receiver = EventReceiver(name, callback_url)
+
+        app = Flask('EventCenterAdapter')
+
+        super().__init__('0.0.0.0', port, app)
+        self.start()
+
+        @app.route(CALLBACK_ENDPOINT, methods=['POST'])
+        def on_event():
+            self.event_handler(request.json)
+            return {}
+
+    def register(self, events: [str]):
+        self.__register(events, is_register=True)
+
+    def unregister(self, events: [str]):
+        self.__register(events, is_register=False)
+
+    def post_event(self, event: Event):
+        url = self.event_center_url + '/post_event'
+        # body = {**self.event_receiver.raw, **event.raw}
+        event.payload['sender_url'] = f'{self.url}'
+        APICaller.make_post_api_call(url, event.raw)
+
+    def __register(self, events: [str], is_register: bool = True):
+        endpoint = '/register' if is_register else '/unregister'
+        url = self.event_center_url + endpoint
+        data = RegistrationData(self.event_receiver, events)
+        # body = {**self.event_receiver.raw, **data.raw}
+        APICaller.make_post_api_call(url, data.raw)
