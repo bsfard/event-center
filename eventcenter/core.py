@@ -4,7 +4,7 @@ import threading
 import time
 import traceback
 from collections import deque
-from typing import Callable, Any
+from typing import Callable
 
 
 class NotifiableError(Exception):
@@ -54,7 +54,7 @@ class InvalidDataError(NotifiableError):
 
 
 class MissingKeyError(NotifiableError):
-    def __init__(self, key: str, data: dict[str: Any]):
+    def __init__(self, key: str, data: dict):
         message = f"Could not find key '{key}' within data:\n{data}."
         error = 'missing_key'
         payload = {

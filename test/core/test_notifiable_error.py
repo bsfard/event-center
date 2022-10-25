@@ -69,7 +69,7 @@ def test_notifiable_error__when_error_not_in_payload():
     # Test
     try:
         raise TestErrorNotInPayloadError()
-    except TestErrorNotInPayloadError as e:
+    except TestErrorNotInPayloadError:
         pass
 
     # Verify

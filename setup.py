@@ -1,7 +1,11 @@
 from setuptools import setup, find_packages
 
 setup(
-    name='event-center',
+    name='eventcenter',
     version='0.0.1',
-    packages=find_packages(include=['core', 'properties', 'network', 'router', 'service', 'event_center_adapter'])
+    author='Ben Sfard',
+    author_email='bsfard@gmail.com',
+    url='https://github.com/bsfard/event-center',
+    packages=find_packages()
+
 )
