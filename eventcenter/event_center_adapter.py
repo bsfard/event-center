@@ -2,9 +2,9 @@ from typing import Callable
 
 from flask import Flask, request
 
-from core import Event
+from eventcenter import Event
 from network import FlaskAppRunner, APICaller
-from properties import Properties
+from eventcenter import Properties
 from service import EventReceiver, RegistrationData
 
 CALLBACK_ENDPOINT = '/on_event'

@@ -6,7 +6,7 @@ import requests
 from flask import Flask
 from werkzeug.serving import make_server
 
-from core import NotifiableError
+from eventcenter import NotifiableError
 
 HEADERS = {'Content-Type': 'application/json'}
 

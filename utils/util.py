@@ -3,8 +3,8 @@ import logging
 import sys
 from typing import Any
 
-from core import Event
-from properties import Properties
+from eventcenter import Event
+from eventcenter import Properties
 from router import EventRouter
 
 logging.basicConfig(level=logging.INFO)

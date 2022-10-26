@@ -4,9 +4,9 @@ import time
 from _pytest.outcomes import fail
 from flask import Flask, request
 
-from core import Event, EventDispatch
+from eventcenter import Event, EventDispatch
 from network import APICaller, FlaskAppRunner
-from properties import Properties
+from eventcenter import Properties
 from service import EventCenter, RegistrationData, EventReceiver
 from service import RESPONSE_OK
 from test_constants import TEST_EVENT_RECEIVER_PORT, EVENT_CENTER_PORT

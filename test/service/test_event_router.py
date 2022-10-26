@@ -1,6 +1,7 @@
-from core import EventDispatch, Event
-from properties import Properties
+from eventcenter import EventDispatch, Event
+from eventcenter import Properties
 from router import EventRouter
+from service import RESPONSE_OK
 from test_constants import EVENT_CENTER_PORT
 from test_helper import validate_expected_handler_count, validate_handler_registered_for_event, \
     validate_event_log_count, TestEventHandler, validate_received_events, register_handler_for_event
@@ -111,7 +112,7 @@ def test_on_internal_event__when_non_registration_event(mocker):
     mock_call.assert_called_with(event)
 
 
-def test_on_external_event():
+def test_on_external_event(mocker):
     # Objective:
     # Event is posted to local_clients Event Dispatch, and locally registered handler receives it.
 
@@ -119,10 +120,11 @@ def test_on_external_event():
     event = Event('test_event', {
         'name': 'Alice'
     })
+    mocker.patch('service.APICaller.make_post_api_call', return_value=RESPONSE_OK)
     register_handler_for_event(handler1, event.name)
 
     # Test
-    event_router.on_external_event(event)
+    event_router.on_external_event(event.raw)
 
     # Verify
     validate_received_events(handler1, [event.name])

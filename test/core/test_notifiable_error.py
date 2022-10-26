@@ -1,4 +1,4 @@
-from core import NotifiableError, EventDispatch
+from eventcenter import NotifiableError, EventDispatch
 from test_helper import TestEventHandler, register_handler_for_event, validate_received_event
 
 handler: TestEventHandler

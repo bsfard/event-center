@@ -1,7 +1,7 @@
 import time
 from typing import Any
 
-from core import EventDispatch
+from eventcenter import EventDispatch
 from test_helper import TestEventHandler, validate_test_handler_registered_for_event, \
     validate_handler_registered_for_all_events, validate_event_log_count, validate_expected_handler_count, \
     register_handler_for_event, register, validate_received_events

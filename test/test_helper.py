@@ -2,7 +2,7 @@ from typing import Callable
 
 import pytest
 
-from core import Event, EventDispatch
+from eventcenter import Event, EventDispatch
 
 
 class TestEventHandler:

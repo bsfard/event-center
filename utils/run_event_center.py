@@ -1,4 +1,4 @@
-from properties import Properties
+from eventcenter import Properties
 from service import EventCenter
 from utils.util import get_program_args
 

@@ -1,6 +1,6 @@
 from typing import Any
 
-from core import NotifiableError
+from eventcenter import NotifiableError
 
 
 class Properties:

@@ -157,9 +157,6 @@ class EventDispatch:
     def __new__(cls):
         if not cls.__instance:
             cls.__instance = super().__new__(cls)
-
-            # if Properties().has(cls.LOG_EVENT):
-            #     cls.__log_event = Properties().get('LOG_EVENT')
         return cls.__instance
 
     def register(self, handler: Callable, events: [str]):

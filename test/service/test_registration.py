@@ -1,4 +1,4 @@
-from core import EventDispatch, Event
+from eventcenter import EventDispatch, Event
 from service import RESPONSE_OK, Registration
 from test_helper import validate_handler_registered_for_event, validate_expected_handler_count
 
@@ -43,7 +43,7 @@ def test_init__when_registering_for_all_events(mocker):
 
     # Setup
     callback_url = 'url'
-    mock_call = mocker.patch('network.APICaller.make_post_api_call', return_value=RESPONSE_OK)
+    mock_call = mocker.patch('service.APICaller.make_post_api_call', return_value=RESPONSE_OK)
 
     # Test
     reg = Registration(callback_url)
@@ -54,7 +54,7 @@ def test_init__when_registering_for_all_events(mocker):
     mock_call.assert_called()
 
 
-def test_cancel__when_registered_for_event():
+def test_cancel__when_registered_for_event(mocker):
     # Objective:
     # Registration's handler is unregistered with Event Dispatch.
 
@@ -77,8 +77,9 @@ def test_cancel__when_registered_for_all_events(mocker):
 
     # Setup
     callback_url = 'url'
-    mock_call = mocker.patch('network.APICaller.make_post_api_call', return_value=RESPONSE_OK)
+    mock_call = mocker.patch('service.APICaller.make_post_api_call', return_value=RESPONSE_OK)
     reg = Registration(callback_url)
+    mock_call.assert_called()
     validate_expected_handler_count(1)
 
     # Test
@@ -95,7 +96,7 @@ def test_on_event(mocker):
 
     # Setup
     callback_url = 'url'
-    mock_call = mocker.patch('network.APICaller.make_post_api_call', return_value=RESPONSE_OK)
+    mock_call = mocker.patch('service.APICaller.make_post_api_call', return_value=RESPONSE_OK)
     reg = Registration(callback_url)
     validate_expected_handler_count(1)
     event = Event('test_event', {'name': 'Alice'})

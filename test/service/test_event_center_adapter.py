@@ -1,6 +1,6 @@
-from core import Event
+from eventcenter import Event
 from event_center_adapter import EventCenterAdapter
-from properties import Properties
+from eventcenter import Properties
 from service import RegistrationData, RESPONSE_OK
 from test_constants import EVENT_CENTER_PORT
 from test_helper import TestEventHandler

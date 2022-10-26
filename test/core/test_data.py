@@ -1,6 +1,6 @@
 import pytest
 
-from core import Data, InvalidDataError, MissingKeyError
+from eventcenter import Data, InvalidDataError, MissingKeyError
 
 
 def setup_module():

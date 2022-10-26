@@ -1,8 +1,8 @@
 from flask import Flask, request
 
-from core import EventDispatch, Data, Event
+from eventcenter import EventDispatch, Data, Event
 from network import FlaskAppRunner, APICaller
-from properties import Properties
+from eventcenter import Properties
 
 RESPONSE_OK = {
     'status': 'OK'
