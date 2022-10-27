@@ -1,14 +1,13 @@
 import logging
 import time
 
-from _pytest.outcomes import fail
+from eventdispatch import Event, EventDispatch
+from eventdispatch import Properties
 from flask import Flask, request
+from pytest import fail
 
-from eventcenter import Event, EventDispatch
-from network import APICaller, FlaskAppRunner
-from eventcenter import Properties
-from service import EventCenter, RegistrationData, EventReceiver
-from service import RESPONSE_OK
+from eventcenter import APICaller, FlaskAppRunner, EventCenter
+from eventcenter.service import RegistrationData, EventReceiver, RESPONSE_OK
 from test_constants import TEST_EVENT_RECEIVER_PORT, EVENT_CENTER_PORT
 
 es: EventCenter
@@ -48,7 +47,7 @@ test_event_receiver2: TestEventReceiver
 def setup_module():
     global es, event_center_url
 
-    # Seed properties that components in test will need.
+    # Seed properties that components in tests will need.
     Properties().set('EVENT_CENTER_PORT', EVENT_CENTER_PORT)
 
     event_center_url = 'http://localhost:' + str(EVENT_CENTER_PORT)

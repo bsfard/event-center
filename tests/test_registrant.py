@@ -1,4 +1,4 @@
-from service import Registrant, EventReceiver
+from eventcenter.service import Registrant, EventReceiver
 
 registrant: Registrant
 
@@ -84,7 +84,7 @@ def test_unregister__when_registered_for_event(mocker):
     registrant.register(test_event)
     validate_expected_registration_count(1)
     assert test_event in registrant.registrations
-    mock_call = mocker.patch('service.Registration.cancel', return_value=None)
+    mock_call = mocker.patch('eventcenter.service.Registration.cancel', return_value=None)
 
     # Test
     registrant.unregister(test_event)
@@ -104,7 +104,7 @@ def test_unregister__when_registered_for_all_events(mocker):
     registrant.register()
     validate_expected_registration_count(1)
     assert all_event_key in registrant.registrations
-    mock_call = mocker.patch('service.Registration.cancel', return_value=None)
+    mock_call = mocker.patch('eventcenter.service.Registration.cancel', return_value=None)
 
     # Test
     registrant.unregister()

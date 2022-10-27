@@ -1,5 +1,6 @@
-from eventcenter import EventDispatch, Event
-from event_center_adapter import EventCenterAdapter
+from eventdispatch import EventDispatch, Event
+
+from .event_center_adapter import EventCenterAdapter
 
 
 class EventRouter:

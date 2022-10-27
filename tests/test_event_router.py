@@ -1,7 +1,7 @@
-from eventcenter import EventDispatch, Event
-from eventcenter import Properties
-from router import EventRouter
-from service import RESPONSE_OK
+from eventdispatch import EventDispatch, Event, Properties
+
+from eventcenter import EventRouter
+from eventcenter.service import RESPONSE_OK
 from test_constants import EVENT_CENTER_PORT
 from test_helper import validate_expected_handler_count, validate_handler_registered_for_event, \
     validate_event_log_count, TestEventHandler, validate_received_events, register_handler_for_event
@@ -13,7 +13,7 @@ handler1: TestEventHandler
 def setup_module():
     EventDispatch().toggle_event_logging(True)
 
-    # Seed properties that components in test will need.
+    # Seed properties that components in tests will need.
     Properties().set('EVENT_CENTER_URL', f'http://localhost:{EVENT_CENTER_PORT}', is_skip_if_exists=True)
     Properties().set('EVENT_CENTER_CALLBACK_HOST', 'http://localhost', is_skip_if_exists=True)
     Properties().set('EVENT_CENTER_CALLBACK_PORT', 7000, is_skip_if_exists=True)
@@ -43,7 +43,7 @@ def test_init(mocker):
     # Registration event for this registration is not propagated to Event Center.
 
     # Setup
-    mock_call = mocker.patch('event_center_adapter.EventCenterAdapter.register', return_value=None)
+    mock_call = mocker.patch('eventcenter.event_center_adapter.EventCenterAdapter.register', return_value=None)
 
     # Test
     # (none)
@@ -67,7 +67,7 @@ def test_on_internal_event__when_registration_event(mocker):
         'events': [test_event],
         'handler': repr(handler1.on_event)
     })
-    mock_call = mocker.patch('event_center_adapter.EventCenterAdapter.register', return_value=None)
+    mock_call = mocker.patch('eventcenter.event_center_adapter.EventCenterAdapter.register', return_value=None)
 
     # Test
     event_router.on_internal_event(event)
@@ -86,7 +86,7 @@ def test_on_internal_event__when_unregistration_event(mocker):
         'events': [test_event],
         'handler': repr(handler1.on_event)
     })
-    mock_call = mocker.patch('event_center_adapter.EventCenterAdapter.unregister', return_value=None)
+    mock_call = mocker.patch('eventcenter.event_center_adapter.EventCenterAdapter.unregister', return_value=None)
 
     # Test
     event_router.on_internal_event(event)
@@ -103,7 +103,7 @@ def test_on_internal_event__when_non_registration_event(mocker):
     event = Event('test_event', {
         'name': 'Alice'
     })
-    mock_call = mocker.patch('event_center_adapter.EventCenterAdapter.post_event', return_value=None)
+    mock_call = mocker.patch('eventcenter.event_center_adapter.EventCenterAdapter.post_event', return_value=None)
 
     # Test
     event_router.on_internal_event(event)
@@ -120,7 +120,7 @@ def test_on_external_event(mocker):
     event = Event('test_event', {
         'name': 'Alice'
     })
-    mocker.patch('service.APICaller.make_post_api_call', return_value=RESPONSE_OK)
+    mocker.patch('eventcenter.service.APICaller.make_post_api_call', return_value=RESPONSE_OK)
     register_handler_for_event(handler1, event.name)
 
     # Test

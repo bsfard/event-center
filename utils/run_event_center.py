@@ -1,5 +1,5 @@
-from eventcenter import Properties
-from service import EventCenter
+from eventdispatch import Properties
+from eventcenter import EventCenter
 from utils.util import get_program_args
 
 get_program_args(default_event_center_host='http://localhost', default_event_center_port=5000)

@@ -1,6 +1,6 @@
 from unittest.mock import call
 
-from service import EventRegistrationManager, EventReceiver
+from eventcenter.service import EventRegistrationManager, EventReceiver
 
 event_registration_manager: EventRegistrationManager
 event_receiver: EventReceiver
@@ -34,7 +34,7 @@ def test_register__when_not_registered__registering_for_events(mocker):
     # Setup
     test_event1 = 'test_event1'
     test_event2 = 'test_event2'
-    mock_call = mocker.patch('service.Registrant.register', return_value=None)
+    mock_call = mocker.patch('eventcenter.service.Registrant.register', return_value=None)
 
     # Test
     event_registration_manager.register(event_receiver, [test_event1, test_event2])
@@ -51,7 +51,7 @@ def test_register__when_not_registered__registering_for_all_events(mocker):
     # Registration is made for all events.
 
     # Setup
-    mock_call = mocker.patch('service.Registrant.register', return_value=None)
+    mock_call = mocker.patch('eventcenter.service.Registrant.register', return_value=None)
 
     # Test
     event_registration_manager.register(event_receiver, [])
@@ -72,7 +72,7 @@ def test_register__when_registered__registering_for_event(mocker):
     validate_expected_registrant_count(1)
     validate_have_registrant(event_receiver)
 
-    mock_call = mocker.patch('service.Registrant.register', return_value=None)
+    mock_call = mocker.patch('eventcenter.service.Registrant.register', return_value=None)
 
     # Test
     event_registration_manager.register(event_receiver, [test_event])
@@ -107,7 +107,7 @@ def test_unregister__when_registered_for_event__unregistering_for_event(mocker):
     validate_expected_registrant_count(1)
     validate_have_registrant(event_receiver)
 
-    mocker.patch('service.Registration.cancel', return_value=None)
+    mocker.patch('eventcenter.service.Registration.cancel', return_value=None)
 
     # Test
     event_registration_manager.unregister(event_receiver, [test_event])
@@ -127,7 +127,7 @@ def test_unregister__when_registered_for_multiple_events__unregistering_for_some
     validate_expected_registrant_count(1)
     validate_have_registrant(event_receiver)
 
-    mocker.patch('service.Registration.cancel', return_value=None)
+    mocker.patch('eventcenter.service.Registration.cancel', return_value=None)
 
     # Test
     event_registration_manager.unregister(event_receiver, [test_event1])
@@ -146,7 +146,7 @@ def test_unregister__when_registered_for_all_events(mocker):
     validate_expected_registrant_count(1)
     validate_have_registrant(event_receiver)
 
-    mocker.patch('service.Registration.cancel', return_value=None)
+    mocker.patch('eventcenter.service.Registration.cancel', return_value=None)
 
     # Test
     event_registration_manager.unregister(event_receiver, [])

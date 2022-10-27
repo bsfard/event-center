@@ -1,8 +1,7 @@
 from typing import Callable
 
 import pytest
-
-from eventcenter import Event, EventDispatch
+from eventdispatch import EventDispatch, Event
 
 
 class TestEventHandler:

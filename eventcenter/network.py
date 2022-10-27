@@ -3,10 +3,9 @@ import threading
 import traceback
 
 import requests
+from eventdispatch import NotifiableError
 from flask import Flask
 from werkzeug.serving import make_server
-
-from eventcenter import NotifiableError
 
 HEADERS = {'Content-Type': 'application/json'}
 
