@@ -1,5 +1,5 @@
 from eventdispatch import EventDispatch, Event, Properties
-from utils.util import log_event, get_program_args, start_event_router
+from eventcenter.utils.util import log_event, get_program_args, start_event_router
 
 get_program_args(default_callback_port=7010)
 start_event_router()

@@ -1,6 +1,6 @@
 import logging
 
-from core import EventDispatch
+from eventdispatch import EventDispatch
 from demo.workers import Worker1, Worker2, APP_STARTED
 
 logging.basicConfig(level=logging.INFO)

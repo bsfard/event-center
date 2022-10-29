@@ -1,6 +1,7 @@
 import logging
 import threading
 import traceback
+from typing import Any, Dict
 
 import requests
 from eventdispatch import NotifiableError
@@ -36,18 +37,19 @@ class FlaskAppRunner(threading.Thread):
 
 class APICaller:
     @staticmethod
-    def make_post_api_call(url: str, body: dict):
+    def make_post_api_call(url: str, body: Dict[str, Any], is_suppress_connection_error: bool = False):
         try:
             response = requests.post(url, json=body, headers=HEADERS)
             return response if response.status_code == 200 else {}
         except requests.exceptions.ConnectionError as e:
-            raise ApiConnectionError(url, body, e)
+            if not is_suppress_connection_error:
+                raise ApiConnectionError(url, body, e)
 
 
 class ApiConnectionError(NotifiableError):
     """Raised when connection to API cannot be established"""
 
-    def __init__(self, url: str, body: dict, exception: traceback):
+    def __init__(self, url: str, body: Dict[str, Any], exception: traceback):
         message = f'\nURL: {url}\nBody: {body}'
         error = 'api_connection_error'
         payload = {

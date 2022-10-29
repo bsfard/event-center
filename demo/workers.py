@@ -2,7 +2,7 @@ import logging
 import time
 from typing import Any
 
-from core import Event, EventDispatch
+from eventdispatch import Event, EventDispatch
 
 STEP_SIM_WORK_SEC = 1
 
@@ -26,7 +26,7 @@ class Worker1:
     def on_event(self, event: Event):
         log_event(self, event)
 
-        # Map events that occurred to actions to perform.
+        # Map events that occurred to action to perform.
         if event.name == APP_STARTED:
             self.do_step1()
 
@@ -61,7 +61,7 @@ class Worker2:
     def on_event(self, event: Event):
         log_event(self, event)
 
-        # Map events that occurred to actions to perform.
+        # Map events that occurred to action to perform.
         if event.name == STEP1_COMPLETED:
             self.do_step2()
 

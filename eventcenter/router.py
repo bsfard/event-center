@@ -1,5 +1,8 @@
+from typing import Dict, Any
+
 from eventdispatch import EventDispatch, Event
 
+from . import ApiConnectionError
 from .event_center_adapter import EventCenterAdapter
 
 
@@ -35,7 +38,7 @@ class EventRouter:
             self.__event_service_adapter.post_event(event)
 
     @staticmethod
-    def on_external_event(event: dict):
+    def on_external_event(event: Dict[str, Any]):
         # Add external (original) event ID and time to payload.
         payload = event.get('payload')
         payload['external_id'] = event.get('id')

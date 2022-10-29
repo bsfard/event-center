@@ -1,6 +1,6 @@
 from demo.workers import Worker2
-from properties import Properties
-from utils.util import get_program_args, start_event_router
+from eventdispatch import Properties
+from eventcenter.utils.util import get_program_args, start_event_router
 
 get_program_args(default_callback_port=7002)
 start_event_router()

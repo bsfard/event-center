@@ -1,3 +1,5 @@
+from typing import Dict, Any
+
 from eventdispatch import EventDispatch, Data, Event, Properties
 from flask import Flask, request
 
@@ -64,7 +66,7 @@ class EventReceiver(Data):
         return self.get('callback_url')
 
     @staticmethod
-    def from_dict(data: dict):
+    def from_dict(data: Dict[str, Any]):
         return EventReceiver(data.get('name'), data.get('callback_url'))
 
     def __eq__(self, other):
@@ -90,7 +92,7 @@ class RegistrationData(Data):
         return self.__events
 
     @staticmethod
-    def from_dict(data: dict):
+    def from_dict(data: Dict[str, Any]):
         event_receiver = EventReceiver.from_dict(data.get('event_receiver'))
         events = data.get('events')
         return RegistrationData(event_receiver, events)
@@ -98,7 +100,7 @@ class RegistrationData(Data):
 
 class EventRegistrationManager:
     def __init__(self):
-        self.__registrants: dict[str: Registrant] = {}
+        self.__registrants: Dict[str, Registrant] = {}
 
     @property
     def registrants(self) -> dict:
@@ -177,10 +179,10 @@ class Registration:
 class Registrant:
     def __init__(self, event_receiver: EventReceiver):
         self.__event_receiver = event_receiver
-        self.__registrations: dict[str: Registration] = {}
+        self.__registrations: Dict[str, Registration] = {}
 
     @property
-    def registrations(self) -> dict[str: Registration]:
+    def registrations(self) -> Dict[str, Registration]:
         return self.__registrations
 
     @property

@@ -7,4 +7,10 @@ setup(
     author_email='bsfard@gmail.com',
     url='https://github.com/bsfard/event-center',
     packages=find_packages(),
+
+    install_requires=[
+        'requests==2.28.1',
+        'Flask==2.2.2',
+        'eventdispatch @ git+ssh://git@github.com/bsfard/event-dispatch.git'
+    ]
 )
