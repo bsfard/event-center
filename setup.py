@@ -11,6 +11,6 @@ setup(
     install_requires=[
         'requests==2.28.1',
         'Flask==2.2.2',
-        'eventdispatch @ git+ssh://git@github.com/bsfard/event-dispatch.git'
+        'eventdispatch @ git+ssh://git@github.com/bsfard/event-dispatch.git@v0.0.1'
     ]
 )
