@@ -385,7 +385,7 @@ def register_event_receiver(event_receiver: TestEventReceiver, events: [str]):
 
 
 def register(registration_data: RegistrationData):
-    make_post_api_call('/register', registration_data.raw)
+    make_post_call('/register', registration_data.raw)
 
 
 def unregister_event_receiver(event_receiver: TestEventReceiver, events: [str]):
@@ -394,7 +394,7 @@ def unregister_event_receiver(event_receiver: TestEventReceiver, events: [str]):
 
 
 def unregister(registration_data: RegistrationData):
-    make_post_api_call('/unregister', registration_data.raw)
+    make_post_call('/unregister', registration_data.raw)
 
 
 def post(event: str, payload: dict = None):

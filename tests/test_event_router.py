@@ -120,7 +120,7 @@ def test_on_external_event(mocker):
     event = Event('test_event', {
         'name': 'Alice'
     })
-    mocker.patch('eventcenter.service.APICaller.make_post_api_call', return_value=RESPONSE_OK)
+    mocker.patch('eventcenter.service.APICaller.make_post_call', return_value=RESPONSE_OK)
     register_handler_for_event(handler1, event.name)
 
     # Test

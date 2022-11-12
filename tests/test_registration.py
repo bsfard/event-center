@@ -44,7 +44,7 @@ def test_init__when_registering_for_all_events(mocker):
 
     # Setup
     callback_url = 'url'
-    mock_call = mocker.patch('eventcenter.service.APICaller.make_post_api_call', return_value=RESPONSE_OK)
+    mock_call = mocker.patch('eventcenter.service.APICaller.make_post_call', return_value=RESPONSE_OK)
 
     # Test
     reg = Registration(callback_url)
@@ -78,7 +78,7 @@ def test_cancel__when_registered_for_all_events(mocker):
 
     # Setup
     callback_url = 'url'
-    mock_call = mocker.patch('eventcenter.service.APICaller.make_post_api_call', return_value=RESPONSE_OK)
+    mock_call = mocker.patch('eventcenter.service.APICaller.make_post_call', return_value=RESPONSE_OK)
     reg = Registration(callback_url)
     mock_call.assert_called()
     validate_expected_handler_count(1)
@@ -97,7 +97,7 @@ def test_on_event(mocker):
 
     # Setup
     callback_url = 'url'
-    mock_call = mocker.patch('eventcenter.service.APICaller.make_post_api_call', return_value=RESPONSE_OK)
+    mock_call = mocker.patch('eventcenter.service.APICaller.make_post_call', return_value=RESPONSE_OK)
     reg = Registration(callback_url)
     validate_expected_handler_count(1)
     event = Event('test_event', {'name': 'Alice'})
