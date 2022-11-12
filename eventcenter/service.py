@@ -173,7 +173,7 @@ class Registration:
         if sender_url and sender_url in self.__callback_url:
             return
 
-        APICaller.make_post_api_call(self.__callback_url, event.raw)
+        APICaller.make_post_call(self.__callback_url, event.raw)
 
 
 class Registrant:

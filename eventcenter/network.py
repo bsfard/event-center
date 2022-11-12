@@ -37,9 +37,9 @@ class FlaskAppRunner(threading.Thread):
 
 class APICaller:
     @staticmethod
-    def make_post_api_call(url: str, body: Dict[str, Any], headers: Dict[str, Any] = None,
-                           session: requests.Session = None,
-                           is_suppress_connection_error: bool = False) -> requests.Response:
+    def make_post_call(url: str, body: Dict[str, Any], headers: Dict[str, Any] = None,
+                       session: requests.Session = None,
+                       is_suppress_connection_error: bool = False) -> requests.Response:
         headers = headers if headers else HEADERS
 
         try:

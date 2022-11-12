@@ -400,11 +400,11 @@ def unregister(registration_data: RegistrationData):
 def post(event: str, payload: dict = None):
     payload = payload if payload else {}
     data = Event(event, payload)
-    make_post_api_call('/post_event', data.raw)
+    make_post_call('/post_event', data.raw)
 
 
-def make_post_api_call(endpoint: str, data: dict, expected_response: dict = RESPONSE_OK):
-    response = APICaller.make_post_api_call(event_center_url + endpoint, data)
+def make_post_call(endpoint: str, data: dict, expected_response: dict = RESPONSE_OK):
+    response = APICaller.make_post_call(event_center_url + endpoint, data)
     assert response != {}
     assert response.status_code == 200
     validate_response(response, expected_response)
