@@ -4,6 +4,7 @@ import sys
 from typing import Any
 
 from eventdispatch import Event, Properties
+
 from eventcenter import EventRouter
 
 logging.basicConfig(level=logging.INFO)
@@ -12,12 +13,14 @@ logging.basicConfig(level=logging.INFO)
 def get_program_args(default_callback_host: str = 'http://localhost',
                      default_callback_port: int = 0,
                      default_event_center_host: str = 'http://localhost',
-                     default_event_center_port: int = 5000):
+                     default_event_center_port: int = 5000,
+                     default_registrants_filepath: str = 'registrants.json'):
     parser = argparse.ArgumentParser()
     parser.add_argument('--callback_host', '-ch')
     parser.add_argument('--callback_port', '-cp')
     parser.add_argument('--event_center_host', '-ech')
     parser.add_argument('--event_center_port', '-ecp')
+    parser.add_argument('--registrants_file_path', '-rfp')
     parsed_args = vars(parser.parse_args(sys.argv[1:]))
 
     # Set up properties.
@@ -32,6 +35,9 @@ def get_program_args(default_callback_host: str = 'http://localhost',
     if type(port) == str:
         port = int(port)
     Properties().set('EVENT_CENTER_CALLBACK_PORT', port)
+
+    registrants_filepath = parsed_args.get('registrants_file_path') or default_registrants_filepath
+    Properties().set('REGISTRANTS_FILE_PATH', registrants_filepath)
 
 
 def start_event_router():

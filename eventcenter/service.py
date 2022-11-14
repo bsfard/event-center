@@ -1,3 +1,4 @@
+import json
 from typing import Dict, Any
 
 from eventdispatch import EventDispatch, Data, Event, Properties
@@ -11,6 +12,8 @@ RESPONSE_OK = {
 
 
 class EventCenter(FlaskAppRunner):
+    STARTED_EVENT = 'event_center.started'
+
     def __init__(self):
         self.__event_registration_manager = EventRegistrationManager()
 
@@ -18,6 +21,8 @@ class EventCenter(FlaskAppRunner):
         port = Properties().get('EVENT_CENTER_PORT')
         super().__init__('0.0.0.0', port, app)
         self.start()
+
+        EventDispatch().post_event(EventCenter.STARTED_EVENT)
 
         @app.route('/register', methods=['POST'])
         def register():
@@ -99,8 +104,12 @@ class RegistrationData(Data):
 
 
 class EventRegistrationManager:
+    __REGISTRANTS_KEY = 'registrants'
+    __registrants = {}
+
     def __init__(self):
-        self.__registrants: Dict[str, Registrant] = {}
+        self.__registrants_file_path = Properties().get('REGISTRANTS_FILE_PATH')
+        self.__load_registrants()
 
     @property
     def registrants(self) -> dict:
@@ -116,11 +125,17 @@ class EventRegistrationManager:
             registrant = Registrant(event_receiver)
             self.__registrants[key] = registrant
 
+        is_got_registered = False
         if events:
             for event in events:
-                registrant.register(event)
+                if registrant.register(event):
+                    is_got_registered = True
         else:
-            registrant.register()
+            if registrant.register():
+                is_got_registered = True
+
+        if is_got_registered:
+            self.__persist_registrants()
 
     def unregister(self, event_receiver: EventReceiver, events: [str]):
         key = self.__build_event_receiver_key(event_receiver)
@@ -128,13 +143,20 @@ class EventRegistrationManager:
         try:
             registrant = self.__registrants[key]
 
+            is_got_unregistered = False
             if events:
                 for event in events:
-                    registrant.unregister(event)
+                    if registrant.unregister(event):
+                        is_got_unregistered = True
             else:
-                registrant.unregister()
+                if registrant.unregister():
+                    is_got_unregistered = True
             if len(registrant.registrations) == 0:
                 del self.__registrants[key]
+
+            if is_got_unregistered:
+                self.__persist_registrants()
+
         except KeyError:
             # No registrant, so nothing to do.
             return
@@ -145,6 +167,34 @@ class EventRegistrationManager:
             return self.__registrants[key]
         except KeyError:
             return None
+
+    def clear_registrants(self):
+        self.__registrants: Dict[str, Registrant] = {}
+        self.__persist_registrants()
+
+    def __load_registrants(self):
+        try:
+            with open(self.__registrants_file_path, 'r') as file:
+                data = json.load(file)
+                if data:
+                    self.__reprocess_registrations(data.get(self.__REGISTRANTS_KEY))
+        except (FileNotFoundError, json.JSONDecodeError, KeyError):
+            # If file doesn't exist, or json data in file is invalid, assume clean start.
+            self.clear_registrants()
+
+    def __reprocess_registrations(self, registrants_data: Dict[str, Any]) -> [registrants]:
+        for key, registrant_data in registrants_data.items():
+            event_receiver = EventReceiver.from_dict(registrant_data['event_receiver'])
+            events = [data['event'] for data in registrant_data['registrations']]
+
+            self.register(event_receiver, events)
+
+    def __persist_registrants(self):
+        with open(self.__registrants_file_path, 'w') as file:
+            raw_registrants = {key: registrant.raw() for key, registrant in self.__registrants.items()}
+            json.dump({
+                self.__REGISTRANTS_KEY: raw_registrants
+            }, file)
 
     @staticmethod
     def __build_event_receiver_key(event_receiver: EventReceiver):
@@ -175,6 +225,16 @@ class Registration:
 
         APICaller.make_post_call(self.__callback_url, event.raw)
 
+    def raw(self) -> Dict[str, Any]:
+        return {
+            'callback_url': self.__callback_url,
+            'event': self.__event
+        }
+
+    @staticmethod
+    def to_raw_list(registrations) -> [Dict[str, Any]]:
+        return [v.raw() for _, v in registrations.items()]
+
 
 class Registrant:
     def __init__(self, event_receiver: EventReceiver):
@@ -189,22 +249,30 @@ class Registrant:
     def event_receiver(self) -> EventReceiver:
         return self.__event_receiver
 
-    def register(self, event: str = None):
+    def register(self, event: str = None) -> bool:
         key = event if event else ''
 
         # Skip registration if registrant is already registered for event.
         if key in self.__registrations:
-            return
+            return False
 
         self.__registrations[key] = Registration(self.__event_receiver.callback_url, event)
+        return True
 
-    def unregister(self, event: str = None):
+    def unregister(self, event: str = None) -> bool:
         key = event if event else ''
 
         # Skip un-registration if registrant is not registered for event.
         if key not in self.__registrations:
-            return
+            return False
 
         registration = self.__registrations.get(key)
         registration.cancel()
         del self.__registrations[key]
+        return True
+
+    def raw(self) -> Dict[str, Any]:
+        return {
+            'event_receiver': self.__event_receiver.raw,
+            'registrations': Registration.to_raw_list(self.__registrations)
+        }

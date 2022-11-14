@@ -49,6 +49,7 @@ def setup_module():
 
     # Seed properties that components in tests will need.
     Properties().set('EVENT_CENTER_PORT', EVENT_CENTER_PORT)
+    Properties().set('REGISTRANTS_FILE_PATH', 'registrants.json', is_skip_if_exists=True)
 
     event_center_url = 'http://localhost:' + str(EVENT_CENTER_PORT)
 
