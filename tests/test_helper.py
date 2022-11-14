@@ -1,3 +1,4 @@
+import os
 from typing import Callable
 
 import pytest
@@ -86,3 +87,21 @@ def validate_received_event(handler: TestEventHandler, expected_event: str, expe
                 # if event.payload == expected_payload:
                 return
     pytest.fail(f'Could not find expected event: {expected_event}')
+
+
+def validate_file_exists(filepath):
+    assert os.path.isfile(filepath)
+
+
+def validate_file_not_exists(filepath):
+    assert not os.path.isfile(filepath)
+
+
+def validate_file_content(filepath, content):
+    try:
+        with open(filepath, 'r') as file:
+            data = file.read()
+        assert data == content
+    except FileNotFoundError:
+        pytest.fail(f"Could not find file '{filepath}'")
+
