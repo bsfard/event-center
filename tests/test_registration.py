@@ -1,6 +1,6 @@
 from eventdispatch import EventDispatch, Event
 
-from eventcenter.service import RESPONSE_OK, Registration
+from eventcenter.service import RESPONSE_OK, Registration, EventReceiver
 from test_helper import validate_handler_registered_for_event, validate_expected_handler_count
 
 
@@ -26,11 +26,11 @@ def test_init__when_registering_for_event():
     # Registration's handler is registered with Event Dispatch.
 
     # Setup
-    callback_url = 'url'
     test_event = 'test_event'
+    event_receiver = EventReceiver('', callback_url='url')
 
     # Test
-    reg = Registration(callback_url, test_event)
+    reg = Registration(event_receiver, test_event)
 
     # Verify
     validate_expected_handler_count(1)
@@ -44,10 +44,11 @@ def test_init__when_registering_for_all_events(mocker):
 
     # Setup
     callback_url = 'url'
+    event_receiver = EventReceiver('', callback_url)
     mock_call = mocker.patch('eventcenter.service.APICaller.make_post_call', return_value=RESPONSE_OK)
 
     # Test
-    reg = Registration(callback_url)
+    reg = Registration(event_receiver)
 
     # Verify
     validate_expected_handler_count(1)
@@ -55,14 +56,14 @@ def test_init__when_registering_for_all_events(mocker):
     mock_call.assert_called()
 
 
-def test_cancel__when_registered_for_event(mocker):
+def test_cancel__when_registered_for_event():
     # Objective:
     # Registration's handler is unregistered with Event Dispatch.
 
     # Setup
-    callback_url = 'url'
     test_event = 'test_event'
-    reg = Registration(callback_url, test_event)
+    event_receiver = EventReceiver('', callback_url='url')
+    reg = Registration(event_receiver, test_event)
     validate_expected_handler_count(1)
 
     # Test
@@ -77,9 +78,9 @@ def test_cancel__when_registered_for_all_events(mocker):
     # Registration's handler is unregistered with Event Dispatch.
 
     # Setup
-    callback_url = 'url'
+    event_receiver = EventReceiver('', callback_url='url')
     mock_call = mocker.patch('eventcenter.service.APICaller.make_post_call', return_value=RESPONSE_OK)
-    reg = Registration(callback_url)
+    reg = Registration(event_receiver)
     mock_call.assert_called()
     validate_expected_handler_count(1)
 
@@ -96,9 +97,9 @@ def test_on_event(mocker):
     # Remote handler's API is called, with event object.
 
     # Setup
-    callback_url = 'url'
+    event_receiver = EventReceiver('', callback_url='url')
     mock_call = mocker.patch('eventcenter.service.APICaller.make_post_call', return_value=RESPONSE_OK)
-    reg = Registration(callback_url)
+    reg = Registration(event_receiver)
     validate_expected_handler_count(1)
     event = Event('test_event', {'name': 'Alice'})
 
@@ -106,4 +107,4 @@ def test_on_event(mocker):
     reg.on_event(event)
 
     # Verify
-    mock_call.assert_called_with(callback_url, event.raw)
+    mock_call.assert_called_with(event_receiver.callback_url, event.raw)

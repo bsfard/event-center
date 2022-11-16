@@ -185,15 +185,21 @@ class EventRegistrationManager:
     def __reprocess_registrations(self, registrants_data: Dict[str, Any]) -> [registrants]:
         for key, registrant_data in registrants_data.items():
             event_receiver = EventReceiver.from_dict(registrant_data['event_receiver'])
-            events = [data['event'] for data in registrant_data['registrations']]
+            events = registrant_data['events']
+            # events = [data['event'] for data in registrant_data['registrations']]
 
             self.register(event_receiver, events)
 
     def __persist_registrants(self):
         with open(self.__registrants_file_path, 'w') as file:
-            raw_registrants = {key: registrant.raw() for key, registrant in self.__registrants.items()}
+            registrants = {}
+            for registrant_key, registrant in self.__registrants.items():
+                registrants[registrant_key] = {
+                    'event_receiver': registrant.event_receiver.raw,
+                    'events': [registration_key for registration_key in registrant.registrations]
+                }
             json.dump({
-                self.__REGISTRANTS_KEY: raw_registrants
+                self.__REGISTRANTS_KEY: registrants
             }, file)
 
     @staticmethod
@@ -202,8 +208,8 @@ class EventRegistrationManager:
 
 
 class Registration:
-    def __init__(self, callback_url: str, event: str = None):
-        self.__callback_url = callback_url
+    def __init__(self, event_receiver: EventReceiver, event: str = None):
+        self.__event_receiver = event_receiver
         self.__event = event
 
         events = [self.__event] if self.__event else []
@@ -220,14 +226,14 @@ class Registration:
     def on_event(self, event: Event):
         # Don't propagate event if event originated from destination url.
         sender_url = event.payload.get('sender_url', '')
-        if sender_url and sender_url in self.__callback_url:
+        if sender_url and sender_url in self.__event_receiver.callback_url:
             return
 
-        APICaller.make_post_call(self.__callback_url, event.raw)
+        APICaller.make_post_call(self.__event_receiver.callback_url, event.raw)
 
     def raw(self) -> Dict[str, Any]:
         return {
-            'callback_url': self.__callback_url,
+            'event_receiver': self.__event_receiver.raw,
             'event': self.__event
         }
 
@@ -256,7 +262,7 @@ class Registrant:
         if key in self.__registrations:
             return False
 
-        self.__registrations[key] = Registration(self.__event_receiver.callback_url, event)
+        self.__registrations[key] = Registration(self.__event_receiver, event)
         return True
 
     def unregister(self, event: str = None) -> bool:

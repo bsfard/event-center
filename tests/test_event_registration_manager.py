@@ -13,6 +13,7 @@ event_receiver: EventReceiver
 
 def setup_module():
     Properties().set('REGISTRANTS_FILE_PATH', 'registrants.json', is_skip_if_exists=True)
+    Properties().set('CLIENT_CALLBACK_RETRIES', 3, is_skip_if_exists=True)
 
 
 def setup_function():
@@ -117,15 +118,7 @@ def test_init__when_have_prior_registrants():
                     "name": registrant.name,
                     "callback_url": registrant.callback_url
                 },
-                "registrations": [
-                    {
-                        "callback_url": registrant.callback_url,
-                        "event": "test_event1"},
-                    {
-                        "callback_url": registrant.callback_url,
-                        "event": "test_event2"
-                    }
-                ]
+                "events": ["test_event1", "test_event2"]
             }
         }
     }
