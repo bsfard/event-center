@@ -39,14 +39,21 @@ class APICaller:
     @staticmethod
     def make_post_call(url: str, body: Dict[str, Any], headers: Dict[str, Any] = None,
                        session: requests.Session = None,
+                       timeout_sec: float = None,
                        is_suppress_connection_error: bool = False) -> requests.Response:
         headers = headers if headers else HEADERS
 
         try:
             if session:
-                response = session.post(url, json=body, headers=headers)
+                if timeout_sec:
+                    response = session.post(url, json=body, headers=headers, timeout=timeout_sec)
+                else:
+                    response = session.post(url, json=body, headers=headers)
             else:
-                response = requests.post(url, json=body, headers=headers)
+                if timeout_sec:
+                    response = requests.post(url, json=body, headers=headers, timeout=timeout_sec)
+                else:
+                    response = requests.post(url, json=body, headers=headers)
 
             APICaller.__validate_response_ok(url, response)
             return response
