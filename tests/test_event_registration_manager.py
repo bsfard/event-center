@@ -2,9 +2,9 @@ import json
 import os
 from unittest.mock import call
 
-from eventdispatch import Properties
+from eventdispatch import Properties, Event
 
-from eventcenter.service import EventRegistrationManager, EventReceiver
+from eventcenter.service import EventRegistrationManager, EventReceiver, Registration
 from test_helper import validate_file_exists, validate_file_not_exists, validate_file_content
 
 event_registration_manager: EventRegistrationManager
@@ -13,6 +13,7 @@ event_receiver: EventReceiver
 
 def setup_module():
     Properties().set('REGISTRANTS_FILE_PATH', 'registrants.json', is_skip_if_exists=True)
+    Properties().set('CLIENT_CALLBACK_TIMEOUT_SEC', 10.0, is_skip_if_exists=True)
     Properties().set('CLIENT_CALLBACK_RETRIES', 3, is_skip_if_exists=True)
 
 
@@ -259,6 +260,28 @@ def test_unregister__when_registered_for_all_events(mocker):
 
     # Test
     event_registration_manager.unregister(event_receiver, [])
+
+    # Verify
+    validate_expected_registrant_count(0)
+
+
+def test_on_event__when_callback_failed_with_max_retries():
+    # Objective:
+    # Unreachable client is unregistered from given event.
+
+    # Setup
+    test_event = 'test_event'
+    event_registration_manager.register(event_receiver, [test_event])
+    validate_expected_registrant_count(1)
+    validate_have_registrant(event_receiver)
+
+    event = Event(Registration.CALLBACK_FAILED_WITH_MAX_RETRIES_EVENT, {
+        'event_receiver': event_receiver,
+        'event': test_event
+    })
+
+    # Test
+    event_registration_manager.on_event(event)
 
     # Verify
     validate_expected_registrant_count(0)
