@@ -1,4 +1,5 @@
-from eventdispatch import EventDispatch, Event, Properties
+from eventdispatch import Event, Properties, register_for_events
+
 from eventcenter.utils.util import log_event, get_program_args, start_event_router
 
 get_program_args(default_callback_port=7010)
@@ -10,6 +11,6 @@ def on_event(event: Event):
 
 
 # Register for all events.
-EventDispatch().register(on_event, [])
+register_for_events(on_event, [])
 
 print(f"Running 'Event Listener' on port: {Properties().get('EVENT_CENTER_CALLBACK_PORT')}")

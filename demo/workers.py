@@ -2,7 +2,7 @@ import logging
 import time
 from typing import Any
 
-from eventdispatch import Event, EventDispatch
+from eventdispatch import Event, register_for_events, unregister_from_events, post_event
 
 STEP_SIM_WORK_SEC = 1
 
@@ -21,7 +21,7 @@ class Worker1:
     ]
 
     def __init__(self):
-        EventDispatch().register(self.on_event, Worker1.events)
+        register_for_events(self.on_event, Worker1.events)
 
     def on_event(self, event: Event):
         log_event(self, event)
@@ -35,7 +35,7 @@ class Worker1:
 
         elif event.name == STEP3_COMPLETED:
             # Done (cleanup).
-            EventDispatch().unregister(self.on_event, Worker1.events)
+            unregister_from_events(self.on_event, Worker1.events)
 
     def do_step1(self):
         log_task(self, 'step 1')
@@ -56,7 +56,7 @@ class Worker2:
     ]
 
     def __init__(self):
-        EventDispatch().register(self.on_event, Worker2.events)
+        register_for_events(self.on_event, Worker2.events)
 
     def on_event(self, event: Event):
         log_event(self, event)
@@ -70,7 +70,7 @@ class Worker2:
 
         elif event.name == STEP4_COMPLETED:
             # Done (cleanup).
-            EventDispatch().unregister(self.on_event, Worker2.events)
+            unregister_from_events(self.on_event, Worker2.events)
 
     def do_step2(self):
         log_task(self, 'step 2')
@@ -81,10 +81,6 @@ class Worker2:
         log_task(self, 'step 4')
         wait(STEP_SIM_WORK_SEC)
         post_event(STEP4_COMPLETED)
-
-
-def post_event(event: str, payload: dict = None):
-    EventDispatch().post_event(event, payload)
 
 
 def wait(amount: float):

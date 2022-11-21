@@ -1,7 +1,8 @@
 import json
 from typing import Dict, Any
 
-from eventdispatch import EventDispatch, Data, Event, Properties
+from eventdispatch import Data, Event, Properties, NamespacedEnum, post_event, register_for_events, \
+    unregister_from_events
 from flask import Flask, request
 
 from eventcenter import FlaskAppRunner, APICaller, ApiConnectionError
@@ -11,9 +12,14 @@ RESPONSE_OK = {
 }
 
 
-class EventCenter(FlaskAppRunner):
-    STARTED_EVENT = 'event_center.started'
+class ECEvent(NamespacedEnum):
+    STARTED = 'started'
 
+    def get_namespace(self) -> str:
+        return 'event_center'
+
+
+class EventCenter(FlaskAppRunner):
     def __init__(self):
         self.__event_registration_manager = EventRegistrationManager()
 
@@ -22,7 +28,7 @@ class EventCenter(FlaskAppRunner):
         super().__init__('0.0.0.0', port, app)
         self.start()
 
-        EventDispatch().post_event(EventCenter.STARTED_EVENT)
+        post_event(ECEvent.STARTED)
 
         @app.route('/register', methods=['POST'])
         def register():
@@ -37,9 +43,9 @@ class EventCenter(FlaskAppRunner):
             return RESPONSE_OK
 
         @app.route('/post_event', methods=['POST'])
-        def post_event():
+        def post():
             data = Event.from_dict(request.json)
-            EventDispatch().post_event(data.name, data.payload)
+            post_event(data.name, data.payload)
             return RESPONSE_OK
 
     # ----- For testing ---------------------------------------------------------------------------
@@ -112,7 +118,7 @@ class EventRegistrationManager:
         self.__load_registrants()
 
         # Register to get notified if clients are unreachable, to take action.
-        EventDispatch().register(self.on_event, [Registration.CALLBACK_FAILED_WITH_MAX_RETRIES_EVENT])
+        register_for_events(self.on_event, [RegistrationEvent.CALLBACK_FAILED_WITH_MAX_RETRIES_EVENT.value])
 
     @property
     def registrants(self) -> dict:
@@ -176,7 +182,7 @@ class EventRegistrationManager:
         self.__persist_registrants()
 
     def on_event(self, event: Event):
-        if event.name == Registration.CALLBACK_FAILED_WITH_MAX_RETRIES_EVENT:
+        if event.name == RegistrationEvent.CALLBACK_FAILED_WITH_MAX_RETRIES_EVENT.namespaced_value:
             self.__handle_unreachable_client(event)
 
     def __load_registrants(self):
@@ -219,10 +225,15 @@ class EventRegistrationManager:
         return event_receiver.name + ',' + event_receiver.callback_url
 
 
-class Registration:
-    CALLBACK_FAILED_EVENT = 'registration.callback_failed'
-    CALLBACK_FAILED_WITH_MAX_RETRIES_EVENT = 'registration.callback_failed_with_max_retries'
+class RegistrationEvent(NamespacedEnum):
+    CALLBACK_FAILED_EVENT = 'callback_failed'
+    CALLBACK_FAILED_WITH_MAX_RETRIES_EVENT = 'callback_failed_with_max_retries'
 
+    def get_namespace(self) -> str:
+        return 'registration'
+
+
+class Registration:
     def __init__(self, event_receiver: EventReceiver, event: str = None):
         self.__event_receiver = event_receiver
         self.__event = event
@@ -231,7 +242,7 @@ class Registration:
         self.__client_callback_timeout_sec = Properties().get('CLIENT_CALLBACK_TIMEOUT_SEC')
 
         events = [self.__event] if self.__event else []
-        EventDispatch().register(self.on_event, events)
+        register_for_events(self.on_event, events)
 
     @property
     def event(self) -> str:
@@ -243,7 +254,7 @@ class Registration:
 
     def cancel(self):
         events = [self.__event] if self.__event else []
-        EventDispatch().unregister(self.on_event, events)
+        unregister_from_events(self.on_event, events)
 
     def on_event(self, event: Event):
         # Don't propagate event if event originated from destination url.
@@ -262,13 +273,13 @@ class Registration:
         self.__unreachable_count += 1
 
         if self.__unreachable_count >= self.__client_callback_retries:
-            EventDispatch().post_event(self.CALLBACK_FAILED_WITH_MAX_RETRIES_EVENT, {
+            post_event(RegistrationEvent.CALLBACK_FAILED_WITH_MAX_RETRIES_EVENT, {
                 'event_receiver': self.__event_receiver,
                 'event': self.__event,
                 'failed_attempts': self.__unreachable_count
             })
         else:
-            EventDispatch().post_event(self.CALLBACK_FAILED_EVENT, {
+            post_event(RegistrationEvent.CALLBACK_FAILED_EVENT, {
                 'event_receiver': self.__event_receiver,
                 'event': self.__event,
                 'failed_attempts': self.__unreachable_count

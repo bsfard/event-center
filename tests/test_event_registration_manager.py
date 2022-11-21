@@ -4,7 +4,7 @@ from unittest.mock import call
 
 from eventdispatch import Properties, Event
 
-from eventcenter.service import EventRegistrationManager, EventReceiver, Registration
+from eventcenter.service import EventRegistrationManager, EventReceiver, RegistrationEvent
 from test_helper import validate_file_exists, validate_file_not_exists, validate_file_content
 
 event_registration_manager: EventRegistrationManager
@@ -275,7 +275,7 @@ def test_on_event__when_callback_failed_with_max_retries():
     validate_expected_registrant_count(1)
     validate_have_registrant(event_receiver)
 
-    event = Event(Registration.CALLBACK_FAILED_WITH_MAX_RETRIES_EVENT, {
+    event = Event(RegistrationEvent.CALLBACK_FAILED_WITH_MAX_RETRIES_EVENT.namespaced_value, {
         'event_receiver': event_receiver,
         'event': test_event
     })

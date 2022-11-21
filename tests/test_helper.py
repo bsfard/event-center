@@ -1,8 +1,9 @@
 import os
-from typing import Callable
+from typing import Callable, Any
 
 import pytest
 from eventdispatch import EventDispatch, Event
+from eventdispatch.core import EventDispatchEvent, register_for_events
 
 
 class TestEventHandler:
@@ -22,13 +23,9 @@ def register_handler_for_event(handler, event=None):
 
     events = [event] if event else []
 
-    register(handler, events)
+    register_for_events(handler.on_event, events)
     validate_expected_handler_count(handler_count + 1)
     validate_event_log_count(event_log_count + 1)
-
-
-def register(handler: TestEventHandler, events: [str]):
-    EventDispatch().register(handler.on_event, events)
 
 
 def get_handler_count():
@@ -63,10 +60,12 @@ def validate_handler_registered_for_event(handler: Callable, event: str = None):
     assert handler in handlers
 
 
-def validate_received_events(handler, expected_events, is_ignore_registration_event=True):
+def validate_received_events(handler: TestEventHandler, expected_events: [Any], is_ignore_registration_event=True):
+    expected_events = EventDispatch.to_string_events(expected_events)
+    registration_event = EventDispatch.to_string_event(EventDispatchEvent.HANDLER_REGISTERED)
     if is_ignore_registration_event:
-        if EventDispatch.REGISTRATION_EVENT in handler.received_events:
-            handler.received_events.pop(EventDispatch.REGISTRATION_EVENT)
+        if registration_event in handler.received_events:
+            handler.received_events.pop(registration_event)
 
     assert len(handler.received_events) == len(expected_events)
 
@@ -104,4 +103,3 @@ def validate_file_content(filepath, content):
         assert data == content
     except FileNotFoundError:
         pytest.fail(f"Could not find file '{filepath}'")
-

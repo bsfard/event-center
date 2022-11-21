@@ -1,8 +1,8 @@
 from typing import Dict, Any
 
-from eventdispatch import EventDispatch, Event
+from eventdispatch import Event, register_for_events, post_event
+from eventdispatch.core import EventDispatchEvent
 
-from . import ApiConnectionError
 from .event_center_adapter import EventCenterAdapter
 
 
@@ -11,7 +11,7 @@ class EventRouter:
         self.__event_service_adapter = EventCenterAdapter(self.on_external_event)
 
         # Register for all internal events, to propagate out.
-        EventDispatch().register(self.on_internal_event, [])
+        register_for_events(self.on_internal_event, [])
 
     def on_internal_event(self, event: Event):
         # Check if event originated from outside (if so, no need to propagate it out again).
@@ -19,14 +19,14 @@ class EventRouter:
             return
 
         # Check if registration event.
-        if event.name == EventDispatch.REGISTRATION_EVENT:
+        if event.name == EventDispatchEvent.HANDLER_REGISTERED.namespaced_value:
             # Check if it's for Event Router (if so, ignore it).
             if 'EventRouter.on_internal_event' in event.payload['handler']:
                 return
 
             events = event.get('events', event.payload)
             self.__event_service_adapter.register(events)
-        elif event.name == EventDispatch.UNREGISTRATION_EVENT:
+        elif event.name == EventDispatchEvent.HANDLER_UNREGISTERED.namespaced_value:
             # Check if it's for Event Router (if so, ignore it).
             if 'EventRouter.on_internal_event' in event.payload['handler']:
                 return
@@ -45,7 +45,7 @@ class EventRouter:
         payload['external_time'] = event.get('time')
 
         # Propagate external event to local_clients event center.
-        EventDispatch().post_event(event.get('name'), payload)
+        post_event(event.get('name'), payload)
 
     def disconnect(self):
         self.__event_service_adapter.shutdown()

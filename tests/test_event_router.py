@@ -1,4 +1,5 @@
 from eventdispatch import EventDispatch, Event, Properties
+from eventdispatch.core import EventDispatchEvent
 
 from eventcenter import EventRouter
 from eventcenter.service import RESPONSE_OK
@@ -63,7 +64,7 @@ def test_on_internal_event__when_registration_event(mocker):
 
     # Setup
     test_event = 'test_event'
-    event = Event(EventDispatch.REGISTRATION_EVENT, {
+    event = Event(EventDispatchEvent.HANDLER_REGISTERED.namespaced_value, {
         'events': [test_event],
         'handler': repr(handler1.on_event)
     })
@@ -82,7 +83,7 @@ def test_on_internal_event__when_unregistration_event(mocker):
 
     # Setup
     test_event = 'test_event'
-    event = Event(EventDispatch.UNREGISTRATION_EVENT, {
+    event = Event(EventDispatchEvent.HANDLER_UNREGISTERED.namespaced_value, {
         'events': [test_event],
         'handler': repr(handler1.on_event)
     })

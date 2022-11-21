@@ -1,6 +1,6 @@
-from eventdispatch import EventDispatch, Event, Properties
+from eventdispatch import EventDispatch, Event, Properties, register_for_events
 
-from eventcenter.service import RESPONSE_OK, Registration, EventReceiver
+from eventcenter.service import RESPONSE_OK, Registration, EventReceiver, RegistrationEvent
 from test_helper import validate_handler_registered_for_event, validate_expected_handler_count, TestEventHandler, \
     validate_received_events
 
@@ -131,8 +131,8 @@ def test_on_event__when_unreachable_client__within_retry_limit():
     event = Event(test_event)
 
     # Register watcher for callback failure event.
-    EventDispatch().register(handler.on_event, [
-        Registration.CALLBACK_FAILED_EVENT
+    register_for_events(handler.on_event, [
+        RegistrationEvent.CALLBACK_FAILED_EVENT
     ])
 
     # Test
@@ -140,7 +140,7 @@ def test_on_event__when_unreachable_client__within_retry_limit():
 
     # Verify
     validate_expected_unreachable_count(reg, 1)
-    validate_received_events(handler, [Registration.CALLBACK_FAILED_EVENT])
+    validate_received_events(handler, [RegistrationEvent.CALLBACK_FAILED_EVENT])
 
 
 def test_on_event__when_unreachable_client__exceeded_retry_limit():
@@ -155,23 +155,23 @@ def test_on_event__when_unreachable_client__exceeded_retry_limit():
     event = Event(test_event)
 
     # Register watcher for callback failure event.
-    EventDispatch().register(handler.on_event, [
-        Registration.CALLBACK_FAILED_EVENT,
-        Registration.CALLBACK_FAILED_WITH_MAX_RETRIES_EVENT
+    register_for_events(handler.on_event, [
+        RegistrationEvent.CALLBACK_FAILED_EVENT,
+        RegistrationEvent.CALLBACK_FAILED_WITH_MAX_RETRIES_EVENT
     ])
 
     # Test
     reg.on_event(event)
     validate_expected_unreachable_count(reg, 1)
-    validate_received_events(handler, [Registration.CALLBACK_FAILED_EVENT])
+    validate_received_events(handler, [RegistrationEvent.CALLBACK_FAILED_EVENT])
 
     reg.on_event(event)
     validate_expected_unreachable_count(reg, 2)
-    validate_received_events(handler, [Registration.CALLBACK_FAILED_EVENT])
+    validate_received_events(handler, [RegistrationEvent.CALLBACK_FAILED_EVENT])
 
     reg.on_event(event)
     validate_expected_unreachable_count(reg, 3)
-    validate_received_events(handler, [Registration.CALLBACK_FAILED_WITH_MAX_RETRIES_EVENT])
+    validate_received_events(handler, [RegistrationEvent.CALLBACK_FAILED_WITH_MAX_RETRIES_EVENT])
 
 
 def test_on_event__when_unreachable_client_becomes_reachable(mocker):
@@ -186,17 +186,17 @@ def test_on_event__when_unreachable_client_becomes_reachable(mocker):
     event = Event(test_event)
 
     # Register watcher for callback failure event.
-    EventDispatch().register(handler.on_event, [
-        Registration.CALLBACK_FAILED_EVENT
+    register_for_events(handler.on_event, [
+        RegistrationEvent.CALLBACK_FAILED_EVENT
     ])
 
     reg.on_event(event)
     validate_expected_unreachable_count(reg, 1)
-    validate_received_events(handler, [Registration.CALLBACK_FAILED_EVENT])
+    validate_received_events(handler, [RegistrationEvent.CALLBACK_FAILED_EVENT])
 
     reg.on_event(event)
     validate_expected_unreachable_count(reg, 2)
-    validate_received_events(handler, [Registration.CALLBACK_FAILED_EVENT])
+    validate_received_events(handler, [RegistrationEvent.CALLBACK_FAILED_EVENT])
 
     # Mock unreachable client call now, making Registration class believe call went thru now.
     mock_call = mocker.patch('eventcenter.service.APICaller.make_post_call', return_value=RESPONSE_OK)
