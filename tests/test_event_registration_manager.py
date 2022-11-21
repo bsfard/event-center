@@ -14,7 +14,6 @@ event_receiver: EventReceiver
 def setup_module():
     Properties().set('REGISTRANTS_FILE_PATH', 'registrants.json', is_skip_if_exists=True)
     Properties().set('CLIENT_CALLBACK_TIMEOUT_SEC', 10.0, is_skip_if_exists=True)
-    Properties().set('CLIENT_CALLBACK_RETRIES', 3, is_skip_if_exists=True)
 
 
 def setup_function():
@@ -275,7 +274,7 @@ def test_on_event__when_callback_failed_with_max_retries():
     validate_expected_registrant_count(1)
     validate_have_registrant(event_receiver)
 
-    event = Event(RegistrationEvent.CALLBACK_FAILED_WITH_MAX_RETRIES_EVENT.namespaced_value, {
+    event = Event(RegistrationEvent.CALLBACK_FAILED_EVENT.namespaced_value, {
         'event_receiver': event_receiver,
         'event': test_event
     })

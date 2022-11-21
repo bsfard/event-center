@@ -51,7 +51,6 @@ def setup_module():
     Properties().set('EVENT_CENTER_PORT', EVENT_CENTER_PORT)
     Properties().set('REGISTRANTS_FILE_PATH', 'registrants.json', is_skip_if_exists=True)
     Properties().set('CLIENT_CALLBACK_TIMEOUT_SEC', 10.0, is_skip_if_exists=True)
-    Properties().set('CLIENT_CALLBACK_RETRIES', 3, is_skip_if_exists=True)
 
     event_center_url = 'http://localhost:' + str(EVENT_CENTER_PORT)
 

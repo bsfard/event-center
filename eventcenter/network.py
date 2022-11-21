@@ -1,6 +1,5 @@
 import logging
 import threading
-import traceback
 from typing import Any, Dict
 
 import requests
@@ -58,9 +57,9 @@ class APICaller:
             APICaller.__validate_response_ok(url, response)
             return response
 
-        except requests.exceptions.ConnectionError as e:
+        except requests.exceptions.ConnectionError:
             if not is_suppress_connection_error:
-                raise ApiConnectionError(url, body, e)
+                raise ApiConnectionError(url, body)
 
     @staticmethod
     def make_get_call(url: str, params: Dict[str, Any], headers: Dict[str, Any] = None,
@@ -77,9 +76,9 @@ class APICaller:
             APICaller.__validate_response_ok(url, response)
             return response
 
-        except requests.exceptions.ConnectionError as e:
+        except requests.exceptions.ConnectionError:
             if not is_suppress_connection_error:
-                raise ApiConnectionError(url, {}, e)
+                raise ApiConnectionError(url, {})
 
     @staticmethod
     def __remove_empty_params(params):
@@ -94,14 +93,15 @@ class APICaller:
 class ApiConnectionError(NotifiableError):
     """Raised when connection to API cannot be established"""
 
-    def __init__(self, url: str, body: Dict[str, Any], exception: traceback):
-        message = f'\nURL: {url}\nBody: {body}'
+    def __init__(self, url: str, body: Dict[str, Any]):
+        message = ''
+        # message = f'\nURL: {url}\nBody: {body}'
         error = 'api_connection_error'
         payload = {
             'url': url,
             'body': body
         }
-        super().__init__(message, error, payload, exception)
+        super().__init__(message, error, payload)
 
 
 class BadResponseStatusError(NotifiableError):

@@ -15,8 +15,7 @@ def get_program_args(default_callback_host: str = 'http://localhost',
                      default_event_center_host: str = 'http://localhost',
                      default_event_center_port: int = 5000,
                      default_registrants_filepath: str = 'registrants.json',
-                     default_client_callback_timeout_sec: float = 10.0,
-                     default_client_callback_retries: int = 3):
+                     default_client_callback_timeout_sec: float = 10.0):
     parser = argparse.ArgumentParser()
     parser.add_argument('--callback_host', '-ch')
     parser.add_argument('--callback_port', '-cp')
@@ -24,7 +23,6 @@ def get_program_args(default_callback_host: str = 'http://localhost',
     parser.add_argument('--event_center_port', '-ecp')
     parser.add_argument('--registrants_file_path', '-rfp')
     parser.add_argument('--client_callback_timeout_sec', '-ccts')
-    parser.add_argument('--client_callback_retries', '-ccr')
     parsed_args = vars(parser.parse_args(sys.argv[1:]))
 
     # Set up properties.
@@ -45,9 +43,6 @@ def get_program_args(default_callback_host: str = 'http://localhost',
 
     client_callback_timeout_sec = parsed_args.get('client_callback_timeout_sec') or default_client_callback_timeout_sec
     Properties().set('CLIENT_CALLBACK_TIMEOUT_SEC', client_callback_timeout_sec)
-
-    client_callback_retries = parsed_args.get('client_callback_retries') or default_client_callback_retries
-    Properties().set('CLIENT_CALLBACK_RETRIES', client_callback_retries)
 
 
 def start_event_router():

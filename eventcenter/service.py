@@ -115,10 +115,11 @@ class EventRegistrationManager:
 
     def __init__(self):
         self.__registrants_file_path = Properties().get('REGISTRANTS_FILE_PATH')
-        self.__load_registrants()
 
         # Register to get notified if clients are unreachable, to take action.
-        register_for_events(self.on_event, [RegistrationEvent.CALLBACK_FAILED_WITH_MAX_RETRIES_EVENT.value])
+        register_for_events(self.on_event, [RegistrationEvent.CALLBACK_FAILED_EVENT])
+
+        self.__load_registrants()
 
     @property
     def registrants(self) -> dict:
@@ -182,7 +183,7 @@ class EventRegistrationManager:
         self.__persist_registrants()
 
     def on_event(self, event: Event):
-        if event.name == RegistrationEvent.CALLBACK_FAILED_WITH_MAX_RETRIES_EVENT.namespaced_value:
+        if event.name == RegistrationEvent.CALLBACK_FAILED_EVENT.namespaced_value:
             self.__handle_unreachable_client(event)
 
     def __load_registrants(self):
@@ -217,8 +218,10 @@ class EventRegistrationManager:
 
     def __handle_unreachable_client(self, event: Event):
         event_receiver = event.payload.get('event_receiver')
+        event_receiver = EventReceiver.from_dict(event_receiver)
         event = event.payload.get('event')
-        self.unregister(event_receiver, [event])
+        events = [event] if event else []
+        self.unregister(event_receiver, events)
 
     @staticmethod
     def __build_event_receiver_key(event_receiver: EventReceiver):
@@ -227,7 +230,6 @@ class EventRegistrationManager:
 
 class RegistrationEvent(NamespacedEnum):
     CALLBACK_FAILED_EVENT = 'callback_failed'
-    CALLBACK_FAILED_WITH_MAX_RETRIES_EVENT = 'callback_failed_with_max_retries'
 
     def get_namespace(self) -> str:
         return 'registration'
@@ -237,8 +239,6 @@ class Registration:
     def __init__(self, event_receiver: EventReceiver, event: str = None):
         self.__event_receiver = event_receiver
         self.__event = event
-        self.__unreachable_count = 0
-        self.__client_callback_retries = Properties().get('CLIENT_CALLBACK_RETRIES')
         self.__client_callback_timeout_sec = Properties().get('CLIENT_CALLBACK_TIMEOUT_SEC')
 
         events = [self.__event] if self.__event else []
@@ -247,10 +247,6 @@ class Registration:
     @property
     def event(self) -> str:
         return self.__event
-
-    @property
-    def unreachable_count(self) -> int:
-        return self.__unreachable_count
 
     def cancel(self):
         events = [self.__event] if self.__event else []
@@ -265,25 +261,16 @@ class Registration:
         try:
             APICaller.make_post_call(self.__event_receiver.callback_url, event.raw,
                                      timeout_sec=self.__client_callback_timeout_sec)
-            self.__unreachable_count = 0
         except ApiConnectionError:
             self.__handle_unreachable_client()
 
     def __handle_unreachable_client(self):
-        self.__unreachable_count += 1
+        self.cancel()
 
-        if self.__unreachable_count >= self.__client_callback_retries:
-            post_event(RegistrationEvent.CALLBACK_FAILED_WITH_MAX_RETRIES_EVENT, {
-                'event_receiver': self.__event_receiver,
-                'event': self.__event,
-                'failed_attempts': self.__unreachable_count
-            })
-        else:
-            post_event(RegistrationEvent.CALLBACK_FAILED_EVENT, {
-                'event_receiver': self.__event_receiver,
-                'event': self.__event,
-                'failed_attempts': self.__unreachable_count
-            })
+        post_event(RegistrationEvent.CALLBACK_FAILED_EVENT, {
+            'event_receiver': self.__event_receiver.raw,
+            'event': self.__event
+        })
 
     def raw(self) -> Dict[str, Any]:
         return {
