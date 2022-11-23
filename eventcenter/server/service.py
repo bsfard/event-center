@@ -24,7 +24,7 @@ class EventCenterService(FlaskAppRunner):
         self.__event_registration_manager = EventRegistrationManager()
 
         app = Flask('EventCenter')
-        port = Properties().get('EVENT_CENTER_PORT')
+        port = Properties.get('EVENT_CENTER_PORT')
         super().__init__('0.0.0.0', port, app)
         self.start()
 

@@ -17,7 +17,7 @@ def main():
     set_properties()
     start_event_router()
     register_for_events(on_event, [])
-    print(f"Running 'Event Listener' on port: {Properties().get('EVENT_CENTER_CALLBACK_PORT')}")
+    print(f"Running 'Event Listener' on port: {Properties.get('EVENT_CENTER_CALLBACK_PORT')}")
 
 
 def on_event(event: Event):
@@ -34,9 +34,9 @@ def get_program_args():
 
 
 def set_properties():
-    Properties().set('EVENT_CENTER_CALLBACK_HOST', program_args.get('callback_host') or DEFAULT_HOST)
-    Properties().set('EVENT_CENTER_CALLBACK_PORT', program_args.get('callback_port') or DEFAULT_PORT)
-    Properties().set('EVENT_CENTER_URL', program_args.get('event_center_url') or DEFAULT_EVENT_CENTER_URL)
+    Properties.set('EVENT_CENTER_CALLBACK_HOST', program_args.get('callback_host') or DEFAULT_HOST)
+    Properties.set('EVENT_CENTER_CALLBACK_PORT', program_args.get('callback_port') or DEFAULT_PORT)
+    Properties.set('EVENT_CENTER_URL', program_args.get('event_center_url') or DEFAULT_EVENT_CENTER_URL)
 
 
 if __name__ == '__main__':

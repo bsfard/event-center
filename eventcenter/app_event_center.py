@@ -16,7 +16,7 @@ def main():
     get_program_args()
     set_properties()
     EventCenterService()
-    print(f"Event Center started on port: {Properties().get('EVENT_CENTER_PORT')}")
+    print(f"Event Center started on port: {Properties.get('EVENT_CENTER_PORT')}")
 
 
 def get_program_args():
@@ -29,9 +29,9 @@ def get_program_args():
 
 
 def set_properties():
-    Properties().set('EVENT_CENTER_PORT', program_args.get('port') or DEFAULT_PORT)
-    Properties().set('REGISTRANTS_FILE_PATH', program_args.get('registrants_path') or DEFAULT_REGISTRANTS_FILE_PATH)
-    Properties().set('CLIENT_CALLBACK_TIMEOUT_SEC', program_args.get('timeout_sec') or DEFAULT_CALLBACK_TIMEOUT_SEC)
+    Properties.set('EVENT_CENTER_PORT', program_args.get('port') or DEFAULT_PORT)
+    Properties.set('REGISTRANTS_FILE_PATH', program_args.get('registrants_path') or DEFAULT_REGISTRANTS_FILE_PATH)
+    Properties.set('CLIENT_CALLBACK_TIMEOUT_SEC', program_args.get('timeout_sec') or DEFAULT_CALLBACK_TIMEOUT_SEC)
 
 
 if __name__ == '__main__':

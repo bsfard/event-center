@@ -12,8 +12,8 @@ event_receiver: EventReceiver
 
 
 def setup_module():
-    Properties().set('REGISTRANTS_FILE_PATH', 'registrants.json', is_skip_if_exists=True)
-    Properties().set('CLIENT_CALLBACK_TIMEOUT_SEC', 10.0, is_skip_if_exists=True)
+    Properties.set('REGISTRANTS_FILE_PATH', 'registrants.json', is_skip_if_exists=True)
+    Properties.set('CLIENT_CALLBACK_TIMEOUT_SEC', 10.0, is_skip_if_exists=True)
 
 
 def setup_function():
@@ -40,7 +40,7 @@ def test_init__no_registrants_file():
     # Manager has an empty list of registrants
 
     # Setup
-    filepath = Properties().get('REGISTRANTS_FILE_PATH')
+    filepath = Properties.get('REGISTRANTS_FILE_PATH')
     os.remove(filepath)
     validate_file_not_exists(filepath)
     expected_content = '{"registrants": {}}'
@@ -61,7 +61,7 @@ def test_init__registrants_file_is_empty():
     # Manager has an empty list of registrants
 
     # Setup
-    filepath = Properties().get('REGISTRANTS_FILE_PATH')
+    filepath = Properties.get('REGISTRANTS_FILE_PATH')
     os.remove(filepath)
     validate_file_not_exists(filepath)
     expected_content = '{"registrants": {}}'
@@ -83,7 +83,7 @@ def test_init__when_no_prior_registrants():
     # Manager has an empty dictionary of registrants
 
     # Setup
-    filepath = Properties().get('REGISTRANTS_FILE_PATH')
+    filepath = Properties.get('REGISTRANTS_FILE_PATH')
     os.remove(filepath)
     validate_file_not_exists(filepath)
     expected_registrants = '{"registrants": {}}'

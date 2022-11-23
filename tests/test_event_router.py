@@ -14,9 +14,9 @@ def setup_module():
     EventDispatch().toggle_event_logging(True)
 
     # Seed properties that components in tests will need.
-    Properties().set('EVENT_CENTER_URL', f'http://localhost:{EVENT_CENTER_PORT}', is_skip_if_exists=True)
-    Properties().set('EVENT_CENTER_CALLBACK_HOST', 'http://localhost', is_skip_if_exists=True)
-    Properties().set('EVENT_CENTER_CALLBACK_PORT', 7000, is_skip_if_exists=True)
+    Properties.set('EVENT_CENTER_URL', f'http://localhost:{EVENT_CENTER_PORT}', is_skip_if_exists=True)
+    Properties.set('EVENT_CENTER_CALLBACK_HOST', 'http://localhost', is_skip_if_exists=True)
+    Properties.set('EVENT_CENTER_CALLBACK_PORT', 7000, is_skip_if_exists=True)
 
 
 def setup_function():

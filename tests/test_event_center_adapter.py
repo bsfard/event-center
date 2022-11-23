@@ -12,9 +12,9 @@ handler1: TestEventHandler
 
 def setup_module():
     # Seed properties that components in tests will need.
-    Properties().set('EVENT_CENTER_URL', f'http://localhost:{EVENT_CENTER_PORT}', is_skip_if_exists=True)
-    Properties().set('EVENT_CENTER_CALLBACK_HOST', 'http://localhost', is_skip_if_exists=True)
-    Properties().set('EVENT_CENTER_CALLBACK_PORT', 7000, is_skip_if_exists=True)
+    Properties.set('EVENT_CENTER_URL', f'http://localhost:{EVENT_CENTER_PORT}', is_skip_if_exists=True)
+    Properties.set('EVENT_CENTER_CALLBACK_HOST', 'http://localhost', is_skip_if_exists=True)
+    Properties.set('EVENT_CENTER_CALLBACK_PORT', 7000, is_skip_if_exists=True)
 
 
 def setup_function():
@@ -37,8 +37,8 @@ def test_init():
     # Adapter is created, no exceptions are raised.
 
     # Setup
-    host = Properties().get('EVENT_CENTER_CALLBACK_HOST')
-    port = str(Properties().get('EVENT_CENTER_CALLBACK_PORT'))
+    host = Properties.get('EVENT_CENTER_CALLBACK_HOST')
+    port = str(Properties.get('EVENT_CENTER_CALLBACK_PORT'))
 
     # Test
     # (none...taken care of by setup function)

@@ -9,7 +9,7 @@ handler: TestEventHandler
 
 
 def setup_module():
-    Properties().set('CLIENT_CALLBACK_TIMEOUT_SEC', 10.0, is_skip_if_exists=True)
+    Properties.set('CLIENT_CALLBACK_TIMEOUT_SEC', 10.0, is_skip_if_exists=True)
 
 
 def setup_function():

@@ -63,7 +63,7 @@ class EventRegistrationManager:
     __registrants = {}
 
     def __init__(self):
-        self.__registrants_file_path = Properties().get('REGISTRANTS_FILE_PATH')
+        self.__registrants_file_path = Properties.get('REGISTRANTS_FILE_PATH')
 
         # Register to get notified if clients are unreachable, to take action.
         register_for_events(self.on_event, [RegistrationEvent.CALLBACK_FAILED_EVENT])
@@ -188,7 +188,7 @@ class Registration:
     def __init__(self, event_receiver: EventReceiver, event: str = None):
         self.__event_receiver = event_receiver
         self.__event = event
-        self.__client_callback_timeout_sec = Properties().get('CLIENT_CALLBACK_TIMEOUT_SEC')
+        self.__client_callback_timeout_sec = Properties.get('CLIENT_CALLBACK_TIMEOUT_SEC')
 
         events = [self.__event] if self.__event else []
         register_for_events(self.on_event, events)
