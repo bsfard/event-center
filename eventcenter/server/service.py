@@ -1,3 +1,5 @@
+import threading
+
 from eventdispatch import Properties, NamespacedEnum, post_event, Event
 from flask import Flask, request
 
@@ -11,6 +13,7 @@ RESPONSE_OK = {
 
 class ECEvent(NamespacedEnum):
     STARTED = 'started'
+    STOPPED = 'stopped'
 
     def get_namespace(self) -> str:
         return 'event_center'
@@ -44,3 +47,12 @@ class EventCenterService(FlaskAppRunner):
             data = Event.from_dict(request.json)
             post_event(data.name, data.payload)
             return RESPONSE_OK
+
+        @app.route('/shutdown', methods=['GET'])
+        def shutdown():
+            threading.Thread(target=self.shutdown, args=[]).start()
+            return RESPONSE_OK
+
+    def shutdown(self):
+        super().shutdown()
+        post_event(ECEvent.STOPPED)
