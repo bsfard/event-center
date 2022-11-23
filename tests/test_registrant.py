@@ -1,10 +1,13 @@
-from eventcenter.service import Registrant, EventReceiver
+from eventdispatch import Properties
+
+from eventcenter.server.event_center import Registrant, EventReceiver
+from eventcenter.server.service import RESPONSE_OK
 
 registrant: Registrant
 
 
 def setup_module():
-    pass
+    Properties().set('CLIENT_CALLBACK_TIMEOUT_SEC', 10.0, is_skip_if_exists=True)
 
 
 def setup_function():
@@ -23,12 +26,13 @@ def teardown_module():
     pass
 
 
-def test_register__when_not_registered__registering_for_event():
+def test_register__when_not_registered__registering_for_event(mocker):
     # Objective:
     # Registration is created for event.
 
     # Setup
     test_event = 'test_event'
+    mocker.patch('eventcenter.server.event_center.APICaller.make_post_call', return_value=RESPONSE_OK)
 
     # Test
     registrant.register(test_event)
@@ -40,12 +44,13 @@ def test_register__when_not_registered__registering_for_event():
     assert reg.event == test_event
 
 
-def test_register__when_not_registered__registering_for_all_events():
+def test_register__when_not_registered__registering_for_all_events(mocker):
     # Objective:
     # Registration is created for all events.
 
     # Setup
     all_event_key = ''
+    mocker.patch('eventcenter.server.event_center.APICaller.make_post_call', return_value=RESPONSE_OK)
 
     # Test
     registrant.register()
@@ -75,7 +80,7 @@ def test_register__when_already_registered_for_event():
     assert test_event in registrant.registrations
 
 
-def test_unregister__when_registered_for_event(mocker):
+def test_unregister__when_registered_for_event():
     # Objective:
     # Registration is cancelled for event, registration object is removed from list.
 
@@ -84,13 +89,11 @@ def test_unregister__when_registered_for_event(mocker):
     registrant.register(test_event)
     validate_expected_registration_count(1)
     assert test_event in registrant.registrations
-    mock_call = mocker.patch('eventcenter.service.Registration.cancel', return_value=None)
 
     # Test
     registrant.unregister(test_event)
 
     # Verify
-    mock_call.assert_called_with()
     validate_expected_registration_count(0)
     assert test_event not in registrant.registrations
 
@@ -101,16 +104,16 @@ def test_unregister__when_registered_for_all_events(mocker):
 
     # Setup
     all_event_key = ''
+    mocker.patch('eventcenter.server.event_center.APICaller.make_post_call', return_value=RESPONSE_OK)
     registrant.register()
     validate_expected_registration_count(1)
     assert all_event_key in registrant.registrations
-    mock_call = mocker.patch('eventcenter.service.Registration.cancel', return_value=None)
 
     # Test
     registrant.unregister()
 
     # Verify
-    mock_call.assert_called_with()
+    # mock_call.assert_called()
     validate_expected_registration_count(0)
     assert all_event_key not in registrant.registrations
 

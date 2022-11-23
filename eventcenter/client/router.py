@@ -3,7 +3,7 @@ from typing import Dict, Any
 from eventdispatch import Event, register_for_events, post_event
 from eventdispatch.core import EventDispatchEvent
 
-from .event_center_adapter import EventCenterAdapter
+from eventcenter.client.event_center_adapter import EventCenterAdapter
 
 
 class EventRouter:

@@ -3,59 +3,8 @@ from typing import Dict, Any
 
 from eventdispatch import Data, Event, Properties, NamespacedEnum, post_event, register_for_events, \
     unregister_from_events
-from flask import Flask, request
 
-from eventcenter import FlaskAppRunner, APICaller, ApiConnectionError
-
-RESPONSE_OK = {
-    'status': 'OK'
-}
-
-
-class ECEvent(NamespacedEnum):
-    STARTED = 'started'
-
-    def get_namespace(self) -> str:
-        return 'event_center'
-
-
-class EventCenter(FlaskAppRunner):
-    def __init__(self):
-        self.__event_registration_manager = EventRegistrationManager()
-
-        app = Flask('EventCenter')
-        port = Properties().get('EVENT_CENTER_PORT')
-        super().__init__('0.0.0.0', port, app)
-        self.start()
-
-        post_event(ECEvent.STARTED)
-
-        @app.route('/register', methods=['POST'])
-        def register():
-            data = RegistrationData.from_dict(request.json)
-            self.__event_registration_manager.register(data.event_receiver, data.events)
-            return RESPONSE_OK
-
-        @app.route('/unregister', methods=['POST'])
-        def unregister():
-            data = RegistrationData.from_dict(request.json)
-            self.__event_registration_manager.unregister(data.event_receiver, data.events)
-            return RESPONSE_OK
-
-        @app.route('/post_event', methods=['POST'])
-        def post():
-            data = Event.from_dict(request.json)
-            post_event(data.name, data.payload)
-            return RESPONSE_OK
-
-    # ----- For testing ---------------------------------------------------------------------------
-    def get_registrants(self):
-        return self.__event_registration_manager.registrants
-
-    def get_registrant(self, event_receiver):
-        return self.__event_registration_manager.get_registrant(event_receiver)
-
-    # ---------------------------------------------------------------------------------------------
+from eventcenter import APICaller, ApiConnectionError
 
 
 class EventReceiver(Data):

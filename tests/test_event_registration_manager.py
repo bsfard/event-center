@@ -1,10 +1,10 @@
 import json
 import os
-from unittest.mock import call
 
 from eventdispatch import Properties, Event
 
-from eventcenter.service import EventRegistrationManager, EventReceiver, RegistrationEvent
+from eventcenter.server.event_center import EventRegistrationManager, EventReceiver, RegistrationEvent
+from eventcenter.server.service import RESPONSE_OK
 from test_helper import validate_file_exists, validate_file_not_exists, validate_file_content
 
 event_registration_manager: EventRegistrationManager
@@ -136,14 +136,13 @@ def test_init__when_have_prior_registrants():
     validate_have_registrant(registrant, er_manager)
 
 
-def test_register__when_not_registered__registering_for_events(mocker):
+def test_register__when_not_registered__registering_for_events():
     # Objective:
     # Registrations are made for all specified events.
 
     # Setup
     test_event1 = 'test_event1'
     test_event2 = 'test_event2'
-    mock_call = mocker.patch('eventcenter.service.Registrant.register', return_value=None)
 
     # Test
     event_registration_manager.register(event_receiver, [test_event1, test_event2])
@@ -151,8 +150,6 @@ def test_register__when_not_registered__registering_for_events(mocker):
     # Verify
     validate_expected_registrant_count(1)
     validate_have_registrant(event_receiver)
-    assert mock_call.call_count == 2
-    assert mock_call.call_args_list == [call(test_event1), call(test_event2)]
 
 
 def test_register__when_not_registered__registering_for_all_events(mocker):
@@ -160,7 +157,7 @@ def test_register__when_not_registered__registering_for_all_events(mocker):
     # Registration is made for all events.
 
     # Setup
-    mock_call = mocker.patch('eventcenter.service.Registrant.register', return_value=None)
+    mock_call = mocker.patch('eventcenter.server.event_center.APICaller.make_post_call', return_value=RESPONSE_OK)
 
     # Test
     event_registration_manager.register(event_receiver, [])
@@ -168,10 +165,10 @@ def test_register__when_not_registered__registering_for_all_events(mocker):
     # Verify
     validate_expected_registrant_count(1)
     validate_have_registrant(event_receiver)
-    mock_call.assert_called_once_with()
+    mock_call.assert_called()
 
 
-def test_register__when_registered__registering_for_event(mocker):
+def test_register__when_registered__registering_for_event():
     # Objective:
     # Existing registrant is used.
 
@@ -181,15 +178,12 @@ def test_register__when_registered__registering_for_event(mocker):
     validate_expected_registrant_count(1)
     validate_have_registrant(event_receiver)
 
-    mock_call = mocker.patch('eventcenter.service.Registrant.register', return_value=None)
-
     # Test
     event_registration_manager.register(event_receiver, [test_event])
 
     # Verify
     validate_expected_registrant_count(1)
     validate_have_registrant(event_receiver)
-    mock_call.assert_called_once_with(test_event)
 
 
 def test_unregister__when_not_registered():
@@ -206,7 +200,7 @@ def test_unregister__when_not_registered():
     validate_expected_registrant_count(0)
 
 
-def test_unregister__when_registered_for_event__unregistering_for_event(mocker):
+def test_unregister__when_registered_for_event__unregistering_for_event():
     # Objective:
     # Registrant is removed from list.
 
@@ -216,8 +210,6 @@ def test_unregister__when_registered_for_event__unregistering_for_event(mocker):
     validate_expected_registrant_count(1)
     validate_have_registrant(event_receiver)
 
-    mocker.patch('eventcenter.service.Registration.cancel', return_value=None)
-
     # Test
     event_registration_manager.unregister(event_receiver, [test_event])
 
@@ -225,7 +217,7 @@ def test_unregister__when_registered_for_event__unregistering_for_event(mocker):
     validate_expected_registrant_count(0)
 
 
-def test_unregister__when_registered_for_multiple_events__unregistering_for_some_events(mocker):
+def test_unregister__when_registered_for_multiple_events__unregistering_for_some_events():
     # Objective:
     # Registrant is not removed from list.
 
@@ -236,8 +228,6 @@ def test_unregister__when_registered_for_multiple_events__unregistering_for_some
     validate_expected_registrant_count(1)
     validate_have_registrant(event_receiver)
 
-    mocker.patch('eventcenter.service.Registration.cancel', return_value=None)
-
     # Test
     event_registration_manager.unregister(event_receiver, [test_event1])
 
@@ -246,7 +236,7 @@ def test_unregister__when_registered_for_multiple_events__unregistering_for_some
     validate_have_registrant(event_receiver)
 
 
-def test_unregister__when_registered_for_all_events(mocker):
+def test_unregister__when_registered_for_all_events():
     # Objective:
     # Registrant is removed from list.
 
@@ -254,8 +244,6 @@ def test_unregister__when_registered_for_all_events(mocker):
     event_registration_manager.register(event_receiver, [])
     validate_expected_registrant_count(1)
     validate_have_registrant(event_receiver)
-
-    mocker.patch('eventcenter.service.Registration.cancel', return_value=None)
 
     # Test
     event_registration_manager.unregister(event_receiver, [])

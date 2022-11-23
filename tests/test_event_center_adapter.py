@@ -1,7 +1,8 @@
 from eventdispatch import Event, Properties
 
-from eventcenter.event_center_adapter import EventCenterAdapter
-from eventcenter.service import RegistrationData, RESPONSE_OK
+from eventcenter.client.event_center_adapter import EventCenterAdapter
+from eventcenter.server.event_center import RegistrationData
+from eventcenter.server.service import RESPONSE_OK
 from test_constants import EVENT_CENTER_PORT
 from test_helper import TestEventHandler
 
@@ -62,7 +63,8 @@ def run_test__register(events, mocker):
     # /register API is called for specified events.
 
     # Setup
-    mock_call = mocker.patch('eventcenter.event_center_adapter.APICaller.make_post_call', return_value=RESPONSE_OK)
+    mock_call = mocker.patch('eventcenter.client.event_center_adapter.APICaller.make_post_call',
+                             return_value=RESPONSE_OK)
 
     # Test
     adapter.register(events)
@@ -86,7 +88,8 @@ def run_test__unregister(events, mocker):
     # /unregister API is called for specified events.
 
     # Setup
-    mock_call = mocker.patch('eventcenter.event_center_adapter.APICaller.make_post_call', return_value=RESPONSE_OK)
+    mock_call = mocker.patch('eventcenter.client.event_center_adapter.APICaller.make_post_call',
+                             return_value=RESPONSE_OK)
 
     # Test
     adapter.unregister(events)
@@ -103,7 +106,8 @@ def test_post_event(mocker):
 
     # Setup
     event = Event('test_event', {'name': 'Alice'})
-    mock_call = mocker.patch('eventcenter.event_center_adapter.APICaller.make_post_call', return_value=RESPONSE_OK)
+    mock_call = mocker.patch('eventcenter.client.event_center_adapter.APICaller.make_post_call',
+                             return_value=RESPONSE_OK)
 
     # Test
     adapter.post_event(event)

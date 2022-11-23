@@ -4,7 +4,7 @@ from eventdispatch import Event, Properties
 from flask import Flask, request
 
 from eventcenter import FlaskAppRunner, APICaller
-from eventcenter.service import EventReceiver, RegistrationData
+from eventcenter.server.event_center import EventReceiver, RegistrationData
 
 CALLBACK_ENDPOINT = '/on_event'
 
