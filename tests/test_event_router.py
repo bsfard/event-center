@@ -1,3 +1,5 @@
+import time
+
 from eventdispatch import EventDispatch, Event, Properties
 from eventdispatch.core import EventDispatchEvent
 
@@ -126,4 +128,5 @@ def test_on_external_event():
     event_router.on_external_event(event.raw)
 
     # Verify
+    time.sleep(0.1)
     validate_received_events(handler1, [event.name])

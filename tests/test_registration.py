@@ -1,3 +1,5 @@
+import time
+
 from eventdispatch import EventDispatch, Event, Properties, register_for_events
 
 from eventcenter.server.event_center import Registration, EventReceiver, RegistrationEvent
@@ -59,6 +61,7 @@ def test_init__when_registering_for_all_events(mocker):
     reg = Registration(event_receiver)
 
     # Verify
+    time.sleep(0.1)
     validate_expected_handler_count(1)
     validate_handler_registered_for_event(reg.on_event)
     mock_call.assert_called()
@@ -89,6 +92,7 @@ def test_cancel__when_registered_for_all_events(mocker):
     event_receiver = EventReceiver('', callback_url='url')
     mock_call = mocker.patch('eventcenter.server.event_center.APICaller.make_post_call', return_value=RESPONSE_OK)
     reg = Registration(event_receiver)
+    time.sleep(0.1)
     mock_call.assert_called()
     validate_expected_handler_count(1)
 
@@ -141,6 +145,7 @@ def test_on_event__when_unreachable_client():
     reg.on_event(event)
 
     # Verify
+    time.sleep(0.1)
     validate_expected_handler_count(1)
     validate_received_events(handler, [RegistrationEvent.CALLBACK_FAILED_EVENT])
 
