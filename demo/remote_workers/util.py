@@ -5,8 +5,6 @@ from typing import Any
 
 from eventdispatch import Event, Properties
 
-from eventcenter import EventRouter
-
 logging.basicConfig(level=logging.INFO)
 
 
@@ -43,16 +41,6 @@ def get_program_args(default_callback_host: str = 'http://localhost',
 
     client_callback_timeout_sec = parsed_args.get('client_callback_timeout_sec') or default_client_callback_timeout_sec
     Properties.set('CLIENT_CALLBACK_TIMEOUT_SEC', client_callback_timeout_sec)
-
-
-def start_event_router():
-    ec = EventRouter()
-    Properties.set('EVENT_ROUTER', ec)
-
-
-def stop_event_router():
-    ec = Properties.get('EVENT_ROUTER')
-    ec.disconnect()
 
 
 def log_event(for_class: Any, event: Event):

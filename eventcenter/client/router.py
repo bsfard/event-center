@@ -1,9 +1,19 @@
 from typing import Dict, Any
 
-from eventdispatch import Event, register_for_events, post_event
+from eventdispatch import Event, register_for_events, post_event, Properties
 from eventdispatch.core import EventDispatchEvent
 
 from eventcenter.client.event_center_adapter import EventCenterAdapter
+
+
+def start_event_router():
+    ec = EventRouter()
+    Properties.set('EVENT_ROUTER', ec)
+
+
+def stop_event_router():
+    ec = Properties.get('EVENT_ROUTER')
+    ec.disconnect()
 
 
 class EventRouter:
