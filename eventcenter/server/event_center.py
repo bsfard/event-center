@@ -7,45 +7,19 @@ from eventdispatch import Data, Event, Properties, NamespacedEnum, post_event, r
 from eventcenter import APICaller, ApiConnectionError
 
 
-class EventReceiver(Data):
-    def __init__(self, name: str, callback_url: str):
-        super().__init__({
-            'name': name,
-            'callback_url': callback_url
-        })
-
-        self.__name = name
-        self.__callback_url = callback_url
-
-    @property
-    def name(self) -> str:
-        return self.get('name')
-
-    @property
-    def callback_url(self) -> str:
-        return self.get('callback_url')
-
-    @staticmethod
-    def from_dict(data: Dict[str, Any]):
-        return EventReceiver(data.get('name'), data.get('callback_url'))
-
-    def __eq__(self, other):
-        return self.name == other.name and self.callback_url == other.callback_url
-
-
 class RegistrationData(Data):
-    def __init__(self, event_receiver: EventReceiver, events: [str]):
+    def __init__(self, callback_url: str, events: [str]):
         super().__init__({
-            'event_receiver': event_receiver.dict,
+            'callback_url': callback_url,
             'events': events
         })
 
-        self.__event_receiver = event_receiver
+        self.__callback_url = callback_url
         self.__events = events
 
     @property
-    def event_receiver(self) -> EventReceiver:
-        return self.__event_receiver
+    def callback_url(self) -> str:
+        return self.__callback_url
 
     @property
     def events(self) -> [str]:
@@ -53,9 +27,9 @@ class RegistrationData(Data):
 
     @staticmethod
     def from_dict(data: Dict[str, Any]):
-        event_receiver = EventReceiver.from_dict(data.get('event_receiver'))
+        callback_url = data.get('callback_url')
         events = data.get('events')
-        return RegistrationData(event_receiver, events)
+        return RegistrationData(callback_url, events)
 
 
 class EventRegistrationManager:
@@ -74,15 +48,13 @@ class EventRegistrationManager:
     def registrants(self) -> dict:
         return self.__registrants
 
-    def register(self, event_receiver: EventReceiver, events: [str]):
-        key = self.__build_event_receiver_key(event_receiver)
-
+    def register(self, callback_url: str, events: [str]):
         try:
-            registrant = self.__registrants[key]
+            registrant = self.__registrants[callback_url]
         except KeyError:
             # New registrant, create and store.
-            registrant = Registrant(event_receiver)
-            self.__registrants[key] = registrant
+            registrant = Registrant(callback_url)
+            self.__registrants[callback_url] = registrant
 
         is_got_registered = False
         if events:
@@ -96,11 +68,9 @@ class EventRegistrationManager:
         if is_got_registered:
             self.__persist_registrants()
 
-    def unregister(self, event_receiver: EventReceiver, events: [str]):
-        key = self.__build_event_receiver_key(event_receiver)
-
+    def unregister(self, callback_url: str, events: [str]):
         try:
-            registrant = self.__registrants[key]
+            registrant = self.__registrants[callback_url]
 
             is_got_unregistered = False
             if events:
@@ -111,7 +81,7 @@ class EventRegistrationManager:
                 if registrant.unregister():
                     is_got_unregistered = True
             if len(registrant.registrations) == 0:
-                del self.__registrants[key]
+                del self.__registrants[callback_url]
 
             if is_got_unregistered:
                 self.__persist_registrants()
@@ -120,10 +90,9 @@ class EventRegistrationManager:
             # No registrant, so nothing to do.
             return
 
-    def get_registrant(self, event_receiver: EventReceiver):
-        key = self.__build_event_receiver_key(event_receiver)
+    def get_registrant(self, callback_url: str):
         try:
-            return self.__registrants[key]
+            return self.__registrants[callback_url]
         except KeyError:
             return None
 
@@ -146,35 +115,25 @@ class EventRegistrationManager:
             self.clear_registrants()
 
     def __reprocess_registrations(self, registrants_data: Dict[str, Any]) -> [registrants]:
-        for key, registrant_data in registrants_data.items():
-            event_receiver = EventReceiver.from_dict(registrant_data['event_receiver'])
-            events = registrant_data['events']
-            # events = [data['event'] for data in registrant_data['registrations']]
-
-            self.register(event_receiver, events)
+        for callback_url, events in registrants_data.items():
+            self.register(callback_url, events)
 
     def __persist_registrants(self):
         with open(self.__registrants_file_path, 'w') as file:
             registrants = {}
-            for registrant_key, registrant in self.__registrants.items():
-                registrants[registrant_key] = {
-                    'event_receiver': registrant.event_receiver.dict,
-                    'events': [registration_key for registration_key in registrant.registrations]
+            for callback_url, registrant in self.__registrants.items():
+                registrants[callback_url] = {
+                    'events': [event for event in registrant.registrations]
                 }
             json.dump({
                 self.__REGISTRANTS_KEY: registrants
             }, file)
 
     def __handle_unreachable_client(self, event: Event):
-        event_receiver = event.payload.get('event_receiver')
-        event_receiver = EventReceiver.from_dict(event_receiver)
+        callback_url = event.payload.get('callback_url')
         event = event.payload.get('event')
         events = [event] if event else []
-        self.unregister(event_receiver, events)
-
-    @staticmethod
-    def __build_event_receiver_key(event_receiver: EventReceiver):
-        return event_receiver.name + ',' + event_receiver.callback_url
+        self.unregister(callback_url, events)
 
 
 class RegistrationEvent(NamespacedEnum):
@@ -185,8 +144,8 @@ class RegistrationEvent(NamespacedEnum):
 
 
 class Registration:
-    def __init__(self, event_receiver: EventReceiver, event: str = None):
-        self.__event_receiver = event_receiver
+    def __init__(self, callback_url: str, event: str = None):
+        self.__callback_url = callback_url
         self.__event = event
         self.__client_callback_timeout_sec = Properties.get('CLIENT_CALLBACK_TIMEOUT_SEC')
 
@@ -204,11 +163,11 @@ class Registration:
     def on_event(self, event: Event):
         # Don't propagate event if event originated from destination url.
         sender_url = event.payload.get('sender_url', '')
-        if sender_url and sender_url in self.__event_receiver.callback_url:
+        if sender_url and sender_url in self.__callback_url:
             return
 
         try:
-            APICaller.make_post_call(self.__event_receiver.callback_url, event.dict,
+            APICaller.make_post_call(self.__callback_url, event.dict,
                                      timeout_sec=self.__client_callback_timeout_sec)
         except ApiConnectionError:
             self.__handle_unreachable_client()
@@ -217,24 +176,24 @@ class Registration:
         self.cancel()
 
         post_event(RegistrationEvent.CALLBACK_FAILED_EVENT, {
-            'event_receiver': self.__event_receiver.dict,
+            'callback_url': self.__callback_url,
             'event': self.__event
         })
 
-    def raw(self) -> Dict[str, Any]:
+    def dict(self) -> Dict[str, Any]:
         return {
-            'event_receiver': self.__event_receiver.dict,
+            'callback_url': self.__callback_url,
             'event': self.__event
         }
 
     @staticmethod
-    def to_raw_list(registrations) -> [Dict[str, Any]]:
-        return [v.raw() for _, v in registrations.items()]
+    def to_dict_list(registrations) -> [Dict[str, Any]]:
+        return [v.dict() for _, v in registrations.items()]
 
 
 class Registrant:
-    def __init__(self, event_receiver: EventReceiver):
-        self.__event_receiver = event_receiver
+    def __init__(self, callback_url: str):
+        self.__callback_url = callback_url
         self.__registrations: Dict[str, Registration] = {}
 
     @property
@@ -242,8 +201,8 @@ class Registrant:
         return self.__registrations
 
     @property
-    def event_receiver(self) -> EventReceiver:
-        return self.__event_receiver
+    def callback_url(self) -> str:
+        return self.__callback_url
 
     def register(self, event: str = None) -> bool:
         key = event if event else ''
@@ -252,7 +211,7 @@ class Registrant:
         if key in self.__registrations:
             return False
 
-        self.__registrations[key] = Registration(self.__event_receiver, event)
+        self.__registrations[key] = Registration(self.__callback_url, event)
         return True
 
     def unregister(self, event: str = None) -> bool:
@@ -267,8 +226,8 @@ class Registrant:
         del self.__registrations[key]
         return True
 
-    def raw(self) -> Dict[str, Any]:
+    def dict(self) -> Dict[str, Any]:
         return {
-            'event_receiver': self.__event_receiver.dict,
-            'registrations': Registration.to_raw_list(self.__registrations)
+            'callback_url': self.__callback_url,
+            'registrations': Registration.to_dict_list(self.__registrations)
         }

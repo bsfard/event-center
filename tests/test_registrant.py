@@ -1,6 +1,6 @@
 from eventdispatch import Properties
 
-from eventcenter.server.event_center import Registrant, EventReceiver
+from eventcenter.server.event_center import Registrant
 from eventcenter.server.service import RESPONSE_OK
 
 registrant: Registrant
@@ -13,8 +13,7 @@ def setup_module():
 def setup_function():
     global registrant
 
-    event_receiver = EventReceiver('Tester', 'url')
-    registrant = Registrant(event_receiver)
+    registrant = Registrant('url')
     validate_expected_registration_count(0)
 
 

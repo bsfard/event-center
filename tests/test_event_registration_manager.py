@@ -3,12 +3,12 @@ import os
 
 from eventdispatch import Properties, Event
 
-from eventcenter.server.event_center import EventRegistrationManager, EventReceiver, RegistrationEvent
+from eventcenter.server.event_center import EventRegistrationManager, RegistrationEvent
 from eventcenter.server.service import RESPONSE_OK
 from test_helper import validate_file_exists, validate_file_not_exists, validate_file_content
 
 event_registration_manager: EventRegistrationManager
-event_receiver: EventReceiver
+callback_url = 'url'
 
 
 def setup_module():
@@ -17,9 +17,7 @@ def setup_module():
 
 
 def setup_function():
-    global event_receiver, event_registration_manager
-
-    event_receiver = EventReceiver('Tester', 'url')
+    global event_registration_manager
 
     event_registration_manager = EventRegistrationManager()
     event_registration_manager.clear_registrants()
@@ -109,15 +107,10 @@ def test_init__when_have_prior_registrants():
     filepath = Properties().get('REGISTRANTS_FILE_PATH')
     os.remove(filepath)
     validate_file_not_exists(filepath)
-    registrant = EventReceiver('UnitTester', "http://localhost:9000/on_event")
-
+    callback_url2 = "http://localhost:9000/on_event"
     expected_registrants = {
         "registrants": {
-            f"{registrant.name},{registrant.callback_url}": {
-                "event_receiver": {
-                    "name": registrant.name,
-                    "callback_url": registrant.callback_url
-                },
+            callback_url2: {
                 "events": ["test_event1", "test_event2"]
             }
         }
@@ -133,7 +126,7 @@ def test_init__when_have_prior_registrants():
     # Verify
     validate_file_exists(filepath)
     validate_expected_registrant_count(1, er_manager)
-    validate_have_registrant(registrant, er_manager)
+    validate_have_registrant(callback_url2, er_manager)
 
 
 def test_register__when_not_registered__registering_for_events():
@@ -145,11 +138,11 @@ def test_register__when_not_registered__registering_for_events():
     test_event2 = 'test_event2'
 
     # Test
-    event_registration_manager.register(event_receiver, [test_event1, test_event2])
+    event_registration_manager.register(callback_url, [test_event1, test_event2])
 
     # Verify
     validate_expected_registrant_count(1)
-    validate_have_registrant(event_receiver)
+    validate_have_registrant(callback_url)
 
 
 def test_register__when_not_registered__registering_for_all_events(mocker):
@@ -160,11 +153,11 @@ def test_register__when_not_registered__registering_for_all_events(mocker):
     mock_call = mocker.patch('eventcenter.server.event_center.APICaller.make_post_call', return_value=RESPONSE_OK)
 
     # Test
-    event_registration_manager.register(event_receiver, [])
+    event_registration_manager.register(callback_url, [])
 
     # Verify
     validate_expected_registrant_count(1)
-    validate_have_registrant(event_receiver)
+    validate_have_registrant(callback_url)
     mock_call.assert_called()
 
 
@@ -174,16 +167,16 @@ def test_register__when_registered__registering_for_event():
 
     # Setup
     test_event = 'test_event'
-    event_registration_manager.register(event_receiver, [test_event])
+    event_registration_manager.register(callback_url, [test_event])
     validate_expected_registrant_count(1)
-    validate_have_registrant(event_receiver)
+    validate_have_registrant(callback_url)
 
     # Test
-    event_registration_manager.register(event_receiver, [test_event])
+    event_registration_manager.register(callback_url, [test_event])
 
     # Verify
     validate_expected_registrant_count(1)
-    validate_have_registrant(event_receiver)
+    validate_have_registrant(callback_url)
 
 
 def test_unregister__when_not_registered():
@@ -194,7 +187,7 @@ def test_unregister__when_not_registered():
     test_event = 'test_event'
 
     # Test
-    event_registration_manager.unregister(event_receiver, [test_event])
+    event_registration_manager.unregister(callback_url, [test_event])
 
     # Verify
     validate_expected_registrant_count(0)
@@ -206,12 +199,12 @@ def test_unregister__when_registered_for_event__unregistering_for_event():
 
     # Setup
     test_event = 'test_event'
-    event_registration_manager.register(event_receiver, [test_event])
+    event_registration_manager.register(callback_url, [test_event])
     validate_expected_registrant_count(1)
-    validate_have_registrant(event_receiver)
+    validate_have_registrant(callback_url)
 
     # Test
-    event_registration_manager.unregister(event_receiver, [test_event])
+    event_registration_manager.unregister(callback_url, [test_event])
 
     # Verify
     validate_expected_registrant_count(0)
@@ -224,16 +217,16 @@ def test_unregister__when_registered_for_multiple_events__unregistering_for_some
     # Setup
     test_event1 = 'test_event1'
     test_event2 = 'test_event2'
-    event_registration_manager.register(event_receiver, [test_event1, test_event2])
+    event_registration_manager.register(callback_url, [test_event1, test_event2])
     validate_expected_registrant_count(1)
-    validate_have_registrant(event_receiver)
+    validate_have_registrant(callback_url)
 
     # Test
-    event_registration_manager.unregister(event_receiver, [test_event1])
+    event_registration_manager.unregister(callback_url, [test_event1])
 
     # Verify
     validate_expected_registrant_count(1)
-    validate_have_registrant(event_receiver)
+    validate_have_registrant(callback_url)
 
 
 def test_unregister__when_registered_for_all_events():
@@ -241,12 +234,12 @@ def test_unregister__when_registered_for_all_events():
     # Registrant is removed from list.
 
     # Setup
-    event_registration_manager.register(event_receiver, [])
+    event_registration_manager.register(callback_url, [])
     validate_expected_registrant_count(1)
-    validate_have_registrant(event_receiver)
+    validate_have_registrant(callback_url)
 
     # Test
-    event_registration_manager.unregister(event_receiver, [])
+    event_registration_manager.unregister(callback_url, [])
 
     # Verify
     validate_expected_registrant_count(0)
@@ -258,12 +251,12 @@ def test_on_event__when_callback_failed_with_max_retries():
 
     # Setup
     test_event = 'test_event'
-    event_registration_manager.register(event_receiver, [test_event])
+    event_registration_manager.register(callback_url, [test_event])
     validate_expected_registrant_count(1)
-    validate_have_registrant(event_receiver)
+    validate_have_registrant(callback_url)
 
     event = Event(RegistrationEvent.CALLBACK_FAILED_EVENT.namespaced_value, {
-        'event_receiver': event_receiver,
+        'callback_url': callback_url,
         'event': test_event
     })
 
@@ -279,6 +272,6 @@ def validate_expected_registrant_count(expected_count: int, manager: EventRegist
     assert len(manager.registrants) == expected_count
 
 
-def validate_have_registrant(evt_receiver: EventReceiver, manager: EventRegistrationManager = None):
+def validate_have_registrant(evt_receiver: str, manager: EventRegistrationManager = None):
     manager = manager if manager else event_registration_manager
     assert manager.get_registrant(evt_receiver)

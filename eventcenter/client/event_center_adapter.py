@@ -4,7 +4,7 @@ from eventdispatch import Event, Properties
 from flask import Flask, request
 
 from eventcenter import FlaskAppRunner, APICaller
-from eventcenter.server.event_center import EventReceiver, RegistrationData
+from eventcenter.server.event_center import RegistrationData
 
 CALLBACK_ENDPOINT = '/on_event'
 
@@ -16,10 +16,8 @@ class EventCenterAdapter(FlaskAppRunner):
         host = Properties.get('EVENT_CENTER_CALLBACK_HOST')
         port = Properties.get('EVENT_CENTER_CALLBACK_PORT')
 
-        name = f'{__class__.__name__}:{port}'
         self.url = f'{host}:{port}'
-        callback_url = f'{self.url}{CALLBACK_ENDPOINT}'
-        self.event_receiver = EventReceiver(name, callback_url)
+        self.callback_url = f'{self.url}{CALLBACK_ENDPOINT}'
 
         app = Flask('EventCenterAdapter')
 
@@ -45,5 +43,5 @@ class EventCenterAdapter(FlaskAppRunner):
     def __register(self, events: [str], is_register: bool = True):
         endpoint = '/register' if is_register else '/unregister'
         url = self.event_center_url + endpoint
-        data = RegistrationData(self.event_receiver, events)
+        data = RegistrationData(self.callback_url, events)
         APICaller.make_post_call(url, data.dict, is_suppress_connection_error=True)

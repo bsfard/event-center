@@ -45,9 +45,9 @@ def test_init():
 
     # Verify
     # (got here, no exceptions raised).
-    assert adapter.event_receiver is not None
-    assert host in adapter.event_receiver.callback_url
-    assert port in adapter.event_receiver.callback_url
+    assert adapter.callback_url is not None
+    assert host in adapter.callback_url
+    assert port in adapter.callback_url
 
 
 def test_register__when_have_events(mocker):
@@ -71,7 +71,7 @@ def run_test__register(events, mocker):
 
     # Verify
     url = adapter.event_center_url + '/register'
-    body = RegistrationData(adapter.event_receiver, events)
+    body = RegistrationData(adapter.callback_url, events)
     mock_call.assert_called_with(url, body.dict, is_suppress_connection_error=True)
 
 
@@ -96,7 +96,7 @@ def run_test__unregister(events, mocker):
 
     # Verify
     url = adapter.event_center_url + '/unregister'
-    body = RegistrationData(adapter.event_receiver, events)
+    body = RegistrationData(adapter.callback_url, events)
     mock_call.assert_called_with(url, body.dict, is_suppress_connection_error=True)
 
 

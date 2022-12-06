@@ -33,13 +33,13 @@ class EventCenterService(FlaskAppRunner):
         @app.route('/register', methods=['POST'])
         def register():
             data = RegistrationData.from_dict(request.json)
-            self.__event_registration_manager.register(data.event_receiver, data.events)
+            self.__event_registration_manager.register(data.callback_url, data.events)
             return RESPONSE_OK
 
         @app.route('/unregister', methods=['POST'])
         def unregister():
             data = RegistrationData.from_dict(request.json)
-            self.__event_registration_manager.unregister(data.event_receiver, data.events)
+            self.__event_registration_manager.unregister(data.callback_url, data.events)
             return RESPONSE_OK
 
         @app.route('/post_event', methods=['POST'])
