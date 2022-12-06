@@ -125,7 +125,7 @@ def test_on_external_event():
     register_handler_for_event(handler1, event.name)
 
     # Test
-    event_router.on_external_event(event.raw)
+    event_router.on_external_event(event.dict)
 
     # Verify
     time.sleep(0.1)

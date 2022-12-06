@@ -119,7 +119,7 @@ def test_on_event__when_reachable_client(mocker):
     reg.on_event(event)
 
     # Verify
-    mock_call.assert_called_with(event_receiver.callback_url, event.raw, timeout_sec=10.0)
+    mock_call.assert_called_with(event_receiver.callback_url, event.dict, timeout_sec=10.0)
 
 
 def test_on_event__when_unreachable_client():

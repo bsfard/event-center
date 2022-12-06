@@ -40,10 +40,10 @@ class EventCenterAdapter(FlaskAppRunner):
     def post_event(self, event: Event):
         url = self.event_center_url + '/post_event'
         event.payload['sender_url'] = f'{self.url}'
-        APICaller.make_post_call(url, event.raw, is_suppress_connection_error=True)
+        APICaller.make_post_call(url, event.dict, is_suppress_connection_error=True)
 
     def __register(self, events: [str], is_register: bool = True):
         endpoint = '/register' if is_register else '/unregister'
         url = self.event_center_url + endpoint
         data = RegistrationData(self.event_receiver, events)
-        APICaller.make_post_call(url, data.raw, is_suppress_connection_error=True)
+        APICaller.make_post_call(url, data.dict, is_suppress_connection_error=True)

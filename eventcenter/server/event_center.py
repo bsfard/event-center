@@ -36,7 +36,7 @@ class EventReceiver(Data):
 class RegistrationData(Data):
     def __init__(self, event_receiver: EventReceiver, events: [str]):
         super().__init__({
-            'event_receiver': event_receiver.raw,
+            'event_receiver': event_receiver.dict,
             'events': events
         })
 
@@ -158,7 +158,7 @@ class EventRegistrationManager:
             registrants = {}
             for registrant_key, registrant in self.__registrants.items():
                 registrants[registrant_key] = {
-                    'event_receiver': registrant.event_receiver.raw,
+                    'event_receiver': registrant.event_receiver.dict,
                     'events': [registration_key for registration_key in registrant.registrations]
                 }
             json.dump({
@@ -208,7 +208,7 @@ class Registration:
             return
 
         try:
-            APICaller.make_post_call(self.__event_receiver.callback_url, event.raw,
+            APICaller.make_post_call(self.__event_receiver.callback_url, event.dict,
                                      timeout_sec=self.__client_callback_timeout_sec)
         except ApiConnectionError:
             self.__handle_unreachable_client()
@@ -217,13 +217,13 @@ class Registration:
         self.cancel()
 
         post_event(RegistrationEvent.CALLBACK_FAILED_EVENT, {
-            'event_receiver': self.__event_receiver.raw,
+            'event_receiver': self.__event_receiver.dict,
             'event': self.__event
         })
 
     def raw(self) -> Dict[str, Any]:
         return {
-            'event_receiver': self.__event_receiver.raw,
+            'event_receiver': self.__event_receiver.dict,
             'event': self.__event
         }
 
@@ -269,6 +269,6 @@ class Registrant:
 
     def raw(self) -> Dict[str, Any]:
         return {
-            'event_receiver': self.__event_receiver.raw,
+            'event_receiver': self.__event_receiver.dict,
             'registrations': Registration.to_raw_list(self.__registrations)
         }

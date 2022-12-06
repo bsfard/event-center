@@ -72,7 +72,7 @@ def run_test__register(events, mocker):
     # Verify
     url = adapter.event_center_url + '/register'
     body = RegistrationData(adapter.event_receiver, events)
-    mock_call.assert_called_with(url, body.raw, is_suppress_connection_error=True)
+    mock_call.assert_called_with(url, body.dict, is_suppress_connection_error=True)
 
 
 def test_unregister__when_have_events(mocker):
@@ -97,7 +97,7 @@ def run_test__unregister(events, mocker):
     # Verify
     url = adapter.event_center_url + '/unregister'
     body = RegistrationData(adapter.event_receiver, events)
-    mock_call.assert_called_with(url, body.raw, is_suppress_connection_error=True)
+    mock_call.assert_called_with(url, body.dict, is_suppress_connection_error=True)
 
 
 def test_post_event(mocker):
@@ -114,4 +114,4 @@ def test_post_event(mocker):
 
     # Verify
     url = adapter.event_center_url + '/post_event'
-    mock_call.assert_called_with(url, event.raw, is_suppress_connection_error=True)
+    mock_call.assert_called_with(url, event.dict, is_suppress_connection_error=True)
