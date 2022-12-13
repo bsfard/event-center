@@ -4,7 +4,7 @@ from eventdispatch import Event, Properties
 from flask import Flask, request
 
 from eventcenter import FlaskAppRunner, APICaller
-from eventcenter.server.event_center import RegistrationData
+from eventcenter.server.event_center import RegistrationData, RemoteEventData
 
 CALLBACK_ENDPOINT = '/on_event'
 
@@ -26,22 +26,25 @@ class EventCenterAdapter(FlaskAppRunner):
 
         @app.route(CALLBACK_ENDPOINT, methods=['POST'])
         def on_event():
-            self.event_handler(request.json)
+            # TODO: Make this call with a thread.
+            remote_event = RemoteEventData.from_dict(request.json)
+            self.event_handler(remote_event)
             return {}
 
-    def register(self, events: [str]):
-        self.__register(events, is_register=True)
+    def register(self, events: [str], channel: str = ''):
+        self.__register(events, channel, is_register=True)
 
-    def unregister(self, events: [str]):
-        self.__register(events, is_register=False)
+    def unregister(self, events: [str], channel: str = ''):
+        self.__register(events, channel, is_register=False)
 
-    def post_event(self, event: Event):
+    def post_event(self, event: Event, channel: str = ''):
         url = self.event_center_url + '/post_event'
         event.payload['sender_url'] = f'{self.url}'
-        APICaller.make_post_call(url, event.dict, is_suppress_connection_error=True)
+        data = RemoteEventData(channel, event)
+        APICaller.make_post_call(url, data.dict, is_suppress_connection_error=True)
 
-    def __register(self, events: [str], is_register: bool = True):
+    def __register(self, events: [str], channel: str, is_register: bool = True):
         endpoint = '/register' if is_register else '/unregister'
         url = self.event_center_url + endpoint
-        data = RegistrationData(self.callback_url, events)
+        data = RegistrationData(self.callback_url, events, channel)
         APICaller.make_post_call(url, data.dict, is_suppress_connection_error=True)

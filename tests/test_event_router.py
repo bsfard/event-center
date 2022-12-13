@@ -1,31 +1,28 @@
 import time
 
-from eventdispatch import EventDispatch, Event, Properties
+from eventdispatch import Event
 from eventdispatch.core import EventDispatchEvent
 
 from eventcenter import EventRouter
-from test_constants import EVENT_CENTER_PORT
+from eventcenter.server.event_center import RemoteEventData
 from test_helper import validate_expected_handler_count, validate_handler_registered_for_event, \
-    validate_event_log_count, TestEventHandler, validate_received_events, register_handler_for_event
+    validate_event_log_count, TestEventHandler, validate_received_events, register_handler_for_event, \
+    prep_default_event_dispatch, set_properties_for_event_center_interfacing, default_event_dispatch
 
 event_router: EventRouter
 handler1: TestEventHandler
 
 
 def setup_module():
-    EventDispatch().toggle_event_logging(True)
-
-    # Seed properties that components in tests will need.
-    Properties.set('EVENT_CENTER_URL', f'http://localhost:{EVENT_CENTER_PORT}', is_skip_if_exists=True)
-    Properties.set('EVENT_CENTER_CALLBACK_HOST', 'http://localhost', is_skip_if_exists=True)
-    Properties.set('EVENT_CENTER_CALLBACK_PORT', 7000, is_skip_if_exists=True)
+    prep_default_event_dispatch()
+    set_properties_for_event_center_interfacing()
 
 
 def setup_function():
     global event_router, handler1
 
-    EventDispatch().clear_event_log()
-    EventDispatch().clear_registered_handlers()
+    default_event_dispatch.clear_event_log()
+    default_event_dispatch.clear_registered_handlers()
 
     event_router = EventRouter()
     handler1 = TestEventHandler()
@@ -36,7 +33,7 @@ def teardown_function():
 
 
 def teardown_module():
-    EventDispatch().toggle_event_logging(False)
+    pass
 
 
 def test_init(mocker):
@@ -65,6 +62,7 @@ def test_on_internal_event__when_registration_event(mocker):
 
     # Setup
     test_event = 'test_event'
+    test_channel = ''
     event = Event(EventDispatchEvent.HANDLER_REGISTERED.namespaced_value, {
         'events': [test_event],
         'handler': repr(handler1.on_event)
@@ -75,7 +73,7 @@ def test_on_internal_event__when_registration_event(mocker):
     event_router.on_internal_event(event)
 
     # Verify registration event got propagated out.
-    mock_call.assert_called_with(event.payload.get('events'))
+    mock_call.assert_called_with(event.payload.get('events'), test_channel)
 
 
 def test_on_internal_event__when_unregistration_event(mocker):
@@ -84,6 +82,7 @@ def test_on_internal_event__when_unregistration_event(mocker):
 
     # Setup
     test_event = 'test_event'
+    test_channel = ''
     event = Event(EventDispatchEvent.HANDLER_UNREGISTERED.namespaced_value, {
         'events': [test_event],
         'handler': repr(handler1.on_event)
@@ -94,7 +93,7 @@ def test_on_internal_event__when_unregistration_event(mocker):
     event_router.on_internal_event(event)
 
     # Verify unregistration event got propagated out.
-    mock_call.assert_called_with(event.payload.get('events'))
+    mock_call.assert_called_with(event.payload.get('events'), test_channel)
 
 
 def test_on_internal_event__when_non_registration_event(mocker):
@@ -102,6 +101,7 @@ def test_on_internal_event__when_non_registration_event(mocker):
     # Event is posted to Event Center.
 
     # Setup
+    test_channel = ''
     event = Event('test_event', {
         'name': 'Alice'
     })
@@ -111,7 +111,7 @@ def test_on_internal_event__when_non_registration_event(mocker):
     event_router.on_internal_event(event)
 
     # Verify
-    mock_call.assert_called_with(event)
+    mock_call.assert_called_with(event, test_channel)
 
 
 def test_on_external_event():
@@ -119,13 +119,16 @@ def test_on_external_event():
     # Event is posted to local_clients Event Dispatch, and locally registered handler receives it.
 
     # Setup
+    test_channel = ''
     event = Event('test_event', {
         'name': 'Alice'
     })
     register_handler_for_event(handler1, event.name)
 
+    remote_event = RemoteEventData(test_channel, event)
+
     # Test
-    event_router.on_external_event(event.dict)
+    event_router.on_external_event(remote_event)
 
     # Verify
     time.sleep(0.1)

@@ -1,14 +1,17 @@
 import threading
 
-from eventdispatch import Properties, NamespacedEnum, post_event, Event
+from eventdispatch import Properties, NamespacedEnum, post_event
 from flask import Flask, request
 
 from eventcenter import FlaskAppRunner
-from eventcenter.server.event_center import EventRegistrationManager, RegistrationData
+from eventcenter.server.event_center import EventRegistrationManager, RegistrationData, RemoteEventData
 
 RESPONSE_OK = {
     'success': 'true'
 }
+
+
+# -------------------------------------------------------------------------------------------------
 
 
 class ECEvent(NamespacedEnum):
@@ -17,6 +20,9 @@ class ECEvent(NamespacedEnum):
 
     def get_namespace(self) -> str:
         return 'event_center'
+
+
+# -------------------------------------------------------------------------------------------------
 
 
 class EventCenterService(FlaskAppRunner):
@@ -28,24 +34,24 @@ class EventCenterService(FlaskAppRunner):
         super().__init__('0.0.0.0', port, app)
         self.start()
 
-        post_event(ECEvent.STARTED)
+        post_event(ECEvent.STARTED, {}, 'admin')
 
         @app.route('/register', methods=['POST'])
         def register():
-            data = RegistrationData.from_dict(request.json)
-            self.__event_registration_manager.register(data.callback_url, data.events)
+            registration_data = RegistrationData.from_dict(request.json)
+            self.__event_registration_manager.register(registration_data)
             return RESPONSE_OK
 
         @app.route('/unregister', methods=['POST'])
         def unregister():
-            data = RegistrationData.from_dict(request.json)
-            self.__event_registration_manager.unregister(data.callback_url, data.events)
+            registration_data = RegistrationData.from_dict(request.json)
+            self.__event_registration_manager.unregister(registration_data)
             return RESPONSE_OK
 
         @app.route('/post_event', methods=['POST'])
         def post():
-            data = Event.from_dict(request.json)
-            post_event(data.name, data.payload)
+            remote_event_data = RemoteEventData.from_dict(request.json)
+            self.__event_registration_manager.post(remote_event_data)
             return RESPONSE_OK
 
         @app.route('/shutdown', methods=['GET'])

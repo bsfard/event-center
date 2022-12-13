@@ -2,8 +2,12 @@ import os
 from typing import Callable, Any
 
 import pytest
-from eventdispatch import EventDispatch, Event
-from eventdispatch.core import EventDispatchEvent, register_for_events
+from eventdispatch import EventDispatch, Event, Properties
+from eventdispatch.core import EventDispatchEvent, register_for_events, EventDispatchManager
+
+from test_constants import EVENT_CENTER_PORT
+
+default_event_dispatch: EventDispatch = EventDispatchManager().default_dispatch
 
 
 class TestEventHandler:
@@ -17,8 +21,22 @@ class TestEventHandler:
         self.received_events[event.name] = event
 
 
-def register_handler_for_event(handler, event=None):
-    event_log_count = len(EventDispatch().event_log)
+def prep_default_event_dispatch():
+    global default_event_dispatch
+    default_event_dispatch.toggle_event_logging(True)
+
+
+def set_properties_for_event_center_interfacing():
+    # Seed properties that components in tests will need.
+    Properties.set('EVENT_CENTER_URL', f'http://localhost:{EVENT_CENTER_PORT}', is_skip_if_exists=True)
+    Properties.set('EVENT_CENTER_CALLBACK_HOST', 'http://localhost', is_skip_if_exists=True)
+    Properties.set('EVENT_CENTER_CALLBACK_PORT', 7000, is_skip_if_exists=True)
+
+
+def register_handler_for_event(handler, event=None, event_dispatch: EventDispatch = None):
+    event_dispatch = event_dispatch if event_dispatch else default_event_dispatch
+
+    event_log_count = len(event_dispatch.event_log)
     handler_count = get_handler_count()
 
     events = [event] if event else []
@@ -28,19 +46,21 @@ def register_handler_for_event(handler, event=None):
     validate_event_log_count(event_log_count + 1)
 
 
-def get_handler_count():
+def get_handler_count(event_dispatch: EventDispatch = None):
+    event_dispatch = event_dispatch if event_dispatch else default_event_dispatch
     count = 0
-    for event_name, handlers in EventDispatch().event_handlers.items():
+    for event_name, handlers in event_dispatch.event_handlers.items():
         count += len(handlers)
     return count
 
 
-def validate_event_log_count(expected_count: int):
-    assert len(EventDispatch().event_log) == expected_count
+def validate_event_log_count(expected_count: int, event_dispatch: EventDispatch = None):
+    event_dispatch = event_dispatch if event_dispatch else default_event_dispatch
+    assert len(event_dispatch.event_log) == expected_count
 
 
-def validate_expected_handler_count(expected_count: int):
-    assert get_handler_count() == expected_count
+def validate_expected_handler_count(expected_count: int, event_dispatch: EventDispatch = None):
+    assert get_handler_count(event_dispatch) == expected_count
 
 
 def validate_handler_registered_for_all_events(handler: TestEventHandler):
@@ -51,12 +71,14 @@ def validate_test_handler_registered_for_event(handler: TestEventHandler, event:
     validate_handler_registered_for_event(handler.on_event, event)
 
 
-def validate_handler_registered_for_event(handler: Callable, event: str = None):
+def validate_handler_registered_for_event(handler: Callable, event: str = None, event_dispatch: EventDispatch = None):
+    event_dispatch = event_dispatch if event_dispatch else default_event_dispatch
+
     # Check if validating for all events.
     if not event:
-        handlers = EventDispatch().all_event_handlers
+        handlers = event_dispatch.all_event_handlers
     else:
-        handlers = EventDispatch().event_handlers.get(event, [])
+        handlers = event_dispatch.event_handlers.get(event, [])
     assert handler in handlers
 
 
