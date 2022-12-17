@@ -1,3 +1,4 @@
+import threading
 from typing import Callable
 
 from eventdispatch import Event, Properties
@@ -26,9 +27,8 @@ class EventCenterAdapter(FlaskAppRunner):
 
         @app.route(CALLBACK_ENDPOINT, methods=['POST'])
         def on_event():
-            # TODO: Make this call with a thread.
             remote_event = RemoteEventData.from_dict(request.json)
-            self.event_handler(remote_event)
+            threading.Thread(target=self.event_handler, args=[remote_event]).start()
             return {}
 
     def register(self, events: [str], channel: str = ''):
