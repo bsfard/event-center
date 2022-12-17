@@ -23,7 +23,7 @@ def setup_function():
     event_dispatch.clear_registered_handlers()
 
     registrant = Registrant('url')
-    validate_expected_registration_count(0)
+    validate_expected_registration_count('', 0)
 
 
 def teardown_function():
@@ -47,7 +47,7 @@ def test_register__when_not_registered__registering_for_event(mocker):
     registrant.register(test_event, channel)
 
     # Verify
-    validate_expected_registration_count(1)
+    validate_expected_registration_count(channel, 1)
     validate_registered_channel_and_event(channel, test_event)
 
 
@@ -63,7 +63,7 @@ def test_register__when_not_registered__registering_for_all_events(mocker):
     registrant.register(channel=channel)
 
     # Verify
-    validate_expected_registration_count(1)
+    validate_expected_registration_count(channel, 1)
     validate_registered_channel_and_event(channel, None)
 
 
@@ -74,16 +74,52 @@ def test_register__when_already_registered_for_event():
     # Setup
     channel = ''
     test_event = 'test_event'
-    registrant.register(test_event, channel)
-    validate_expected_registration_count(1)
-    validate_registered_channel_and_event(channel, test_event)
+    create_registration(channel, test_event, 1)
 
     # Test
     registrant.register(test_event, channel)
 
     # Verify
-    validate_expected_registration_count(1)
+    validate_expected_registration_count(channel, 1)
     validate_registered_channel_and_event(channel, test_event)
+
+
+def test_unregister__when_not_registered_for_event__registered_for_other_events():
+    # Objective:
+    # Other registrations are not cancelled, registration list remains the same.
+
+    # Setup
+    channel = ''
+    test_event1 = 'test_event1'
+    test_event2 = 'test_event2'
+    create_registration(channel, test_event1, 1)
+
+    # Test
+    registrant.unregister(test_event2, channel)
+
+    # Verify
+    validate_expected_registration_count(channel, 1)
+    validate_registered_channel_and_event(channel, test_event1)
+
+
+def test_unregister__when_registered_for_event_and_other_events():
+    # Objective:
+    # Specified registration is cancelled.
+    # Other registrations are not cancelled.
+
+    # Setup
+    channel = ''
+    test_event1 = 'test_event1'
+    test_event2 = 'test_event2'
+    create_registration(channel, test_event1, 1)
+    create_registration(channel, test_event2, 2)
+
+    # Test
+    registrant.unregister(test_event2, channel)
+
+    # Verify
+    validate_expected_registration_count(channel, 1)
+    validate_registered_channel_and_event(channel, test_event1)
 
 
 def test_unregister__when_registered_for_event():
@@ -93,15 +129,13 @@ def test_unregister__when_registered_for_event():
     # Setup
     channel = ''
     test_event = 'test_event'
-    registrant.register(test_event, channel)
-    validate_expected_registration_count(1)
-    validate_registered_channel_and_event(channel, test_event)
+    create_registration(channel, test_event, 1)
 
     # Test
     registrant.unregister(test_event, channel)
 
     # Verify
-    validate_expected_registration_count(0)
+    validate_expected_registration_count(channel, 0)
     assert channel not in registrant.registrations
 
 
@@ -112,37 +146,91 @@ def test_unregister__when_registered_for_all_events(mocker):
     # Setup
     channel = ''
     mocker.patch('eventcenter.server.event_center.APICaller.make_post_call', return_value=RESPONSE_OK)
-    registrant.register(channel=channel)
-    validate_expected_registration_count(1)
-    validate_registered_channel_and_event(channel, None)
+    create_registration(channel, None, 1)
 
     # Test
     registrant.unregister()
 
     # Verify
-    validate_expected_registration_count(0)
+    validate_expected_registration_count(channel, 0)
     assert channel not in registrant.registrations
 
 
-def test_unregister__when_not_registered():
+def test_unregister_all__when_not_registered():
     # Objective:
-    # Registration is not cancelled, registration list remains the same.
+    # No exception occurs.
 
     # Setup
     channel = ''
-    test_event1 = 'test_event1'
-    registrant.register(test_event1, channel)
-    validate_expected_registration_count(1)
-    validate_registered_channel_and_event(channel, test_event1)
-
-    test_event2 = 'test_event2'
+    validate_expected_registration_count(channel, 0)
 
     # Test
-    registrant.unregister(test_event2, channel)
+    registrant.unregister_all()
 
     # Verify
-    validate_expected_registration_count(1)
-    validate_registered_channel_and_event(channel, test_event1)
+    validate_expected_registration_count(channel, 0)
+    assert channel not in registrant.registrations
+
+
+def test_unregister_all__when_registered_for_event():
+    # Objective:
+    # All registrations for registrant are deleted.
+
+    # Setup
+    channel = ''
+    test_event = 'test_event'
+    create_registration(channel, test_event, 1)
+
+    # Test
+    registrant.unregister_all()
+
+    # Verify
+    validate_expected_registration_count(channel, 0)
+    assert channel not in registrant.registrations
+
+
+def test_unregister_all__when_registered_for_all_events():
+    # Objective:
+    # All registrations for registrant are deleted.
+
+    # Setup
+    channel = ''
+    create_registration(channel, None, 1)
+
+    # Test
+    registrant.unregister_all()
+
+    # Verify
+    validate_expected_registration_count(channel, 0)
+    assert channel not in registrant.registrations
+
+
+def test_unregister_all__when_registered_for_events_and_all_events():
+    # Objective:
+    # All registrations for registrant are deleted.
+
+    # Setup
+    channel = ''
+    test_event = 'test_event'
+    create_registration(channel, test_event, 1)
+    create_registration(channel, None, 2)
+
+    registrant.register(None, channel)
+    validate_expected_registration_count(channel, 2)
+    validate_registered_channel_and_event(channel, None)
+
+    # Test
+    registrant.unregister_all()
+
+    # Verify
+    validate_expected_registration_count(channel, 0)
+    assert channel not in registrant.registrations
+
+
+def create_registration(channel: str, event: str = None, expected_count: int = 0):
+    registrant.register(event, channel)
+    validate_expected_registration_count(channel, expected_count)
+    validate_registered_channel_and_event(channel, event)
 
 
 def validate_registered_channel_and_event(channel: str = '', event: str = None):
@@ -159,5 +247,5 @@ def validate_registered_channel_and_event(channel: str = '', event: str = None):
         assert reg.event is None
 
 
-def validate_expected_registration_count(expected_count):
-    assert len(registrant.registrations) == expected_count
+def validate_expected_registration_count(channel: str, expected_count):
+    assert len(registrant.registrations.get(channel, [])) == expected_count
