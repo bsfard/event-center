@@ -5,8 +5,6 @@ from typing import Any
 
 from eventdispatch import Event, Properties
 
-logging.basicConfig(level=logging.INFO)
-
 
 def get_program_args(default_callback_host: str = 'http://localhost',
                      default_callback_port: int = 0,
@@ -44,7 +42,8 @@ def get_program_args(default_callback_host: str = 'http://localhost',
 
 
 def log_event(for_class: Any, event: Event):
-    get_logger(for_class).info(f" Got event '{event.name}'\n{event.raw}\n")
+    get_logger(for_class).info(f" Got event '{event.name}'\nPayload:\n{event.dict}\n")
+    # get_logger(for_class).info(f" Got event '{event.name}'\n{json.dumps(event.dict, indent=2)}\n")
 
 
 def get_logger(cls: Any):

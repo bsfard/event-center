@@ -1,9 +1,11 @@
 import argparse
+import logging
 import sys
 
 from eventdispatch import Event, Properties, register_for_events
 
-from demo.remote_workers.util import log_event, start_event_router
+from demo.remote_workers.util import log_event
+from eventcenter import start_event_router
 
 DEFAULT_HOST = 'http://localhost'
 DEFAULT_PORT = 7010
@@ -13,6 +15,8 @@ program_args = {}
 
 
 def main():
+    logging.basicConfig(level=logging.INFO)
+
     get_program_args()
     set_properties()
     start_event_router()

@@ -10,6 +10,10 @@ RESPONSE_OK = {
     'success': 'true'
 }
 
+RESPONSE_ERROR = {
+    'success': 'false'
+}
+
 
 # -------------------------------------------------------------------------------------------------
 
@@ -34,7 +38,7 @@ class EventCenterService(FlaskAppRunner):
         super().__init__('0.0.0.0', port, app)
         self.start()
 
-        post_event(ECEvent.STARTED, {}, 'admin')
+        post_event(ECEvent.STARTED, {})
 
         @app.route('/register', methods=['POST'])
         def register():
@@ -46,6 +50,16 @@ class EventCenterService(FlaskAppRunner):
         def unregister():
             registration_data = RegistrationData.from_dict(request.json)
             self.__event_registration_manager.unregister(registration_data)
+            return RESPONSE_OK
+
+        @app.route('/unregister_all', methods=['POST'])
+        def unregister_all():
+            callback_url = request.json.get('callback_url', '')
+            if not callback_url:
+                RESPONSE_ERROR['error'] = 'Missing callback url'
+                return RESPONSE_ERROR
+
+            self.__event_registration_manager.unregister_all(callback_url)
             return RESPONSE_OK
 
         @app.route('/post_event', methods=['POST'])

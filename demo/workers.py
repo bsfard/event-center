@@ -6,6 +6,8 @@ from eventdispatch import Event, register_for_events, unregister_from_events, po
 
 STEP_SIM_WORK_SEC = 1
 
+logging.basicConfig(level=logging.INFO)
+
 
 class WorkerEvent(NamespacedEnum):
     APP_STARTED = 'started'

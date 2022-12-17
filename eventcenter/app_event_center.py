@@ -1,4 +1,5 @@
 import argparse
+import logging
 import sys
 
 from eventdispatch import Properties
@@ -13,6 +14,8 @@ program_args = {}
 
 
 def main():
+    logging.basicConfig(level=logging.INFO)
+
     get_program_args()
     set_properties()
     EventCenterService()

@@ -1,4 +1,5 @@
 import json
+import logging
 from typing import Dict, Any
 
 from eventdispatch import Data, Event, Properties, NamespacedEnum, register_for_events, \
@@ -128,6 +129,16 @@ class EventRegistrationManager:
             # No registrant, so nothing to do.
             return
 
+    def unregister_all(self, callback_url: str):
+        try:
+            registrant = self.__registrants[callback_url]
+            if registrant.unregister_all():
+                del self.__registrants[callback_url]
+                self.__persist_registrants()
+        except KeyError:
+            # No registrant, so nothing to do.
+            return
+
     @staticmethod
     def post(remote_event_data: RemoteEventData):
         if remote_event_data.channel not in EventDispatchManager().event_dispatchers:
@@ -168,9 +179,10 @@ class EventRegistrationManager:
         with open(self.__registrants_file_path, 'w') as file:
             registrants = {}
             for callback_url, registrant in self.__registrants.items():
-                registrants[callback_url] = {
-                    'events': [event for event in registrant.registrations]
-                }
+                registrants[callback_url] = {}
+                for channel, registrations in registrant.registrations.items():
+                    events = [] if len(registrations) == 0 else [event for event in registrations]
+                    registrants[callback_url][channel] = events
             json.dump({
                 self.__REGISTRANTS_KEY: registrants
             }, file)
@@ -261,12 +273,14 @@ class Registration:
 
 
 class Registrant:
+    __ALL_EVENT = ''
+
     def __init__(self, callback_url: str):
         self.__callback_url = callback_url
-        self.__registrations: Dict[str, Registration] = {}
+        self.__registrations: Dict[str, Dict[str, Registration]] = {}
 
     @property
-    def registrations(self) -> Dict[str, Registration]:
+    def registrations(self) -> Dict[str, Dict[str, Registration]]:
         return self.__registrations
 
     @property
@@ -274,31 +288,64 @@ class Registrant:
         return self.__callback_url
 
     def register(self, event: str = None, channel: str = '') -> bool:
-        key = self.__build_key(channel, event)
+        if channel not in self.__registrations:
+            self.__registrations[channel] = {}
+
+        registrations = self.__registrations[channel]
+
+        key = event if event else self.__ALL_EVENT
 
         # Skip registration if registrant is already registered for event.
-        if key in self.__registrations:
+        if key in registrations:
             return False
 
-        self.__registrations[key] = Registration(self.__callback_url, event, channel)
+        registrations[key] = Registration(self.__callback_url, event, channel)
+
+        self.__log_message_registrations()
         return True
 
     def unregister(self, event: str = None, channel: str = '') -> bool:
-        key = self.__build_key(channel, event)
-
-        # Skip un-registration if registrant is not registered for event.
-        if key not in self.__registrations:
+        # Skip un-registration if channel is not in list.
+        if channel not in self.__registrations:
             return False
 
-        registration = self.__registrations.get(key)
+        registrations = self.__registrations[channel]
+
+        key = event if event else self.__ALL_EVENT
+
+        # Skip un-registration if registrant is not registered for event.
+        if key not in registrations:
+            return False
+
+        registration = registrations.get(key)
         registration.cancel()
-        del self.__registrations[key]
+        del self.__registrations[channel][key]
+
+        # Delete channel if no more events.
+        if len(self.__registrations[channel]) == 0:
+            del self.__registrations[channel]
+
+        self.__log_message_registrations()
         return True
 
-    @staticmethod
-    def __build_key(channel: str, event: str):
-        event = event if event else ''
-        return f'{channel}:{event}'
+    def unregister_all(self) -> bool:
+        is_unregistered = False
+        for channel, registrations in self.__registrations.items():
+            for event, registration in registrations.items():
+                registration.cancel()
+                is_unregistered = True
+
+        self.__registrations = {}
+
+        self.__log_message_registrations()
+        return is_unregistered
+
+    def __log_message_registrations(self):
+        message = 'Registrations:\n'
+        for channel, registrations in self.__registrations.items():
+            for event, registration in registrations.items():
+                message += f'{registration.dict()}'
+        logging.getLogger().debug(message)
 
     def dict(self) -> Dict[str, Any]:
         return {

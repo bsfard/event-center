@@ -41,7 +41,6 @@ def test_register__when_not_registered__registering_for_event(mocker):
     # Setup
     channel = ''
     test_event = 'test_event'
-    expected_key = f'{channel}:{test_event}'
     mocker.patch('eventcenter.server.event_center.APICaller.make_post_call', return_value=RESPONSE_OK)
 
     # Test
@@ -49,9 +48,7 @@ def test_register__when_not_registered__registering_for_event(mocker):
 
     # Verify
     validate_expected_registration_count(1)
-    assert expected_key in registrant.registrations
-    reg = registrant.registrations[expected_key]
-    assert reg.event == test_event
+    validate_registered_channel_and_event(channel, test_event)
 
 
 def test_register__when_not_registered__registering_for_all_events(mocker):
@@ -60,8 +57,6 @@ def test_register__when_not_registered__registering_for_all_events(mocker):
 
     # Setup
     channel = ''
-    all_event_key = ''
-    expected_key = f'{channel}:{all_event_key}'
     mocker.patch('eventcenter.server.event_center.APICaller.make_post_call', return_value=RESPONSE_OK)
 
     # Test
@@ -69,9 +64,7 @@ def test_register__when_not_registered__registering_for_all_events(mocker):
 
     # Verify
     validate_expected_registration_count(1)
-    assert expected_key in registrant.registrations
-    reg = registrant.registrations[expected_key]
-    assert reg.event is None
+    validate_registered_channel_and_event(channel, None)
 
 
 def test_register__when_already_registered_for_event():
@@ -81,17 +74,16 @@ def test_register__when_already_registered_for_event():
     # Setup
     channel = ''
     test_event = 'test_event'
-    expected_key = f'{channel}:{test_event}'
     registrant.register(test_event, channel)
     validate_expected_registration_count(1)
-    assert expected_key in registrant.registrations
+    validate_registered_channel_and_event(channel, test_event)
 
     # Test
     registrant.register(test_event, channel)
 
     # Verify
     validate_expected_registration_count(1)
-    assert expected_key in registrant.registrations
+    validate_registered_channel_and_event(channel, test_event)
 
 
 def test_unregister__when_registered_for_event():
@@ -101,17 +93,16 @@ def test_unregister__when_registered_for_event():
     # Setup
     channel = ''
     test_event = 'test_event'
-    expected_key = f'{channel}:{test_event}'
     registrant.register(test_event, channel)
     validate_expected_registration_count(1)
-    assert expected_key in registrant.registrations
+    validate_registered_channel_and_event(channel, test_event)
 
     # Test
     registrant.unregister(test_event, channel)
 
     # Verify
     validate_expected_registration_count(0)
-    assert expected_key not in registrant.registrations
+    assert channel not in registrant.registrations
 
 
 def test_unregister__when_registered_for_all_events(mocker):
@@ -120,19 +111,17 @@ def test_unregister__when_registered_for_all_events(mocker):
 
     # Setup
     channel = ''
-    all_event_key = ''
-    expected_key = f'{channel}:{all_event_key}'
     mocker.patch('eventcenter.server.event_center.APICaller.make_post_call', return_value=RESPONSE_OK)
     registrant.register(channel=channel)
     validate_expected_registration_count(1)
-    assert expected_key in registrant.registrations
+    validate_registered_channel_and_event(channel, None)
 
     # Test
     registrant.unregister()
 
     # Verify
     validate_expected_registration_count(0)
-    assert expected_key not in registrant.registrations
+    assert channel not in registrant.registrations
 
 
 def test_unregister__when_not_registered():
@@ -142,21 +131,32 @@ def test_unregister__when_not_registered():
     # Setup
     channel = ''
     test_event1 = 'test_event1'
-    expected_key1 = f'{channel}:{test_event1}'
     registrant.register(test_event1, channel)
     validate_expected_registration_count(1)
-    assert expected_key1 in registrant.registrations
+    validate_registered_channel_and_event(channel, test_event1)
 
     test_event2 = 'test_event2'
-    expected_key2 = f'{channel}:{test_event2}'
 
     # Test
     registrant.unregister(test_event2, channel)
 
     # Verify
     validate_expected_registration_count(1)
-    assert expected_key2 not in registrant.registrations
-    assert expected_key1 in registrant.registrations
+    validate_registered_channel_and_event(channel, test_event1)
+
+
+def validate_registered_channel_and_event(channel: str = '', event: str = None):
+    event = event if event else ''
+
+    assert channel in registrant.registrations
+    events = registrant.registrations[channel]
+    assert event in events
+    reg = events[event]
+
+    if event:
+        assert reg.event == event
+    else:
+        assert reg.event is None
 
 
 def validate_expected_registration_count(expected_count):

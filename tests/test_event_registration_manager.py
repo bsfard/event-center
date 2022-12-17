@@ -1,5 +1,6 @@
 import json
 import os
+import time
 
 import pytest
 from eventdispatch import Properties, Event, EventDispatch, EventDispatchManager
@@ -13,7 +14,7 @@ SOME_CHANNEL = 'some_channel'
 
 event_dispatch: EventDispatch
 event_registration_manager: EventRegistrationManager
-callback_url = 'url'
+callback_url = 'http://localhost'
 
 
 def setup_module():
@@ -152,13 +153,23 @@ def test_init__when_have_prior_registrants():
 def test_register__when_not_registered__registering_for_events():
     # Objective:
     # Registrations are made for all specified events.
+    # Registrant, channel, and events are properly persisted.
 
     # Setup
+    filepath = Properties.get('REGISTRANTS_FILE_PATH')
     channel = ''
     test_event1 = 'test_event1'
     test_event2 = 'test_event2'
     data = RegistrationData(callback_url, [test_event1, test_event2], channel)
 
+    expected_registrants = {
+        "registrants": {
+            callback_url: {
+                channel: [test_event1, test_event2]
+            }
+        }
+    }
+
     # Test
     event_registration_manager.register(data)
 
@@ -166,15 +177,30 @@ def test_register__when_not_registered__registering_for_events():
     validate_expected_registrant_count(1)
     validate_have_registrant(callback_url)
 
+    # Verify (registrant info got persisted correctly).
+    validate_file_exists(filepath)
+    validate_file_content(filepath, json.dumps(expected_registrants))
 
-def test_register__when_not_registered__registering_for_all_events(mocker):
+
+def test_register__when_not_registered__registering_for_all_events():
     # Objective:
     # Registration is made for all events.
+    # Registrant, channel, and events are properly persisted.
 
     # Setup
+    filepath = Properties.get('REGISTRANTS_FILE_PATH')
     channel = ''
     data = RegistrationData(callback_url, [], channel)
-    mock_call = mocker.patch('eventcenter.server.event_center.APICaller.make_post_call', return_value=RESPONSE_OK)
+
+    expected_registrants = {
+        "registrants": {
+            callback_url: {
+                channel: [
+                    ""
+                ]
+            }
+        }
+    }
 
     # Test
     event_registration_manager.register(data)
@@ -182,20 +208,41 @@ def test_register__when_not_registered__registering_for_all_events(mocker):
     # Verify
     validate_expected_registrant_count(1)
     validate_have_registrant(callback_url)
-    mock_call.assert_called()
+
+    # Verify (registrant info got persisted correctly).
+    validate_file_exists(filepath)
+    validate_file_content(filepath, json.dumps(expected_registrants))
 
 
-def test_register__when_registered__registering_for_event():
+def test_register__when_registered__registering_for_same_event():
     # Objective:
-    # Existing registrant is used.
+    # Existing registrant is unchanged.
 
     # Setup
     channel = ''
     test_event = 'test_event'
     data = RegistrationData(callback_url, [test_event], channel)
+    create_registrant_with_data(data, callback_url, 1)
+
+    # Test
     event_registration_manager.register(data)
+
+    # Verify
     validate_expected_registrant_count(1)
     validate_have_registrant(callback_url)
+
+
+def test_register__when_registered__registering_for_different_event():
+    # Objective:
+    # Existing registrant is used and gets an additional event registered.
+
+    # Setup
+    channel = ''
+    test_event1 = 'test_event1'
+    test_event2 = 'test_event2'
+    create_registrant(callback_url, channel, 1, [test_event1])
+
+    data = RegistrationData(callback_url, [test_event2], channel)
 
     # Test
     event_registration_manager.register(data)
@@ -229,9 +276,7 @@ def test_unregister__when_registered_for_event__unregistering_for_event():
     channel = ''
     test_event = 'test_event'
     data = RegistrationData(callback_url, [test_event], channel)
-    event_registration_manager.register(data)
-    validate_expected_registrant_count(1)
-    validate_have_registrant(callback_url)
+    create_registrant_with_data(data, callback_url, 1)
 
     # Test
     event_registration_manager.unregister(data)
@@ -248,10 +293,7 @@ def test_unregister__when_registered_for_multiple_events__unregistering_for_some
     channel = ''
     test_event1 = 'test_event1'
     test_event2 = 'test_event2'
-    data = RegistrationData(callback_url, [test_event1, test_event2], channel)
-    event_registration_manager.register(data)
-    validate_expected_registrant_count(1)
-    validate_have_registrant(callback_url)
+    create_registrant(callback_url, channel, 1, [test_event1, test_event2])
 
     data = RegistrationData(callback_url, [test_event1], channel)
 
@@ -270,15 +312,174 @@ def test_unregister__when_registered_for_all_events():
     # Setup
     channel = ''
     data = RegistrationData(callback_url, [], channel)
+    create_registrant_with_data(data, callback_url, 1)
     event_registration_manager.register(data)
-    validate_expected_registrant_count(1)
-    validate_have_registrant(callback_url)
 
     # Test
     event_registration_manager.unregister(data)
 
     # Verify
     validate_expected_registrant_count(0)
+
+
+def test_unregister_all__when_not_registered__no_other_registrants():
+    # Objective:
+    # Nothing happens, no registrants are in memory and persisted.
+
+    # Setup
+    filepath = Properties.get('REGISTRANTS_FILE_PATH')
+    validate_expected_registrant_count(0)
+
+    expected_registrants = {
+        "registrants": {}
+    }
+
+    # Test
+    event_registration_manager.unregister_all(callback_url)
+
+    # Verify
+    validate_expected_registrant_count(0)
+    validate_file_exists(filepath)
+    validate_file_content(filepath, json.dumps(expected_registrants))
+
+
+def test_unregister_all__when_not_registered__have_other_registrants():
+    # Objective:
+    # Nothing happens, other registrants are still there in memory and persisted.
+
+    # Setup
+    filepath = Properties.get('REGISTRANTS_FILE_PATH')
+    callback_url1 = 'some_other_url'
+
+    channel = ''
+    test_event = 'test_event'
+    create_registrant(callback_url, channel, 1, [test_event])
+
+    expected_registrants = {
+        "registrants": {
+            callback_url: {
+                channel: [
+                    test_event
+                ]
+            }
+        }
+    }
+
+    # Test
+    event_registration_manager.unregister_all(callback_url1)
+
+    # Verify
+    validate_expected_registrant_count(1)
+    validate_file_exists(filepath)
+    validate_file_content(filepath, json.dumps(expected_registrants))
+
+
+def test_unregister_all__when_registered_for_event_and_all_events__on_same_channel__no_other_registrants(mocker):
+    # Objective:
+    # Registrant's registrations are not in memory nor persisted.
+
+    # Setup
+    filepath = Properties.get('REGISTRANTS_FILE_PATH')
+
+    channel = ''
+    test_event = 'test_event'
+    mocker.patch('eventcenter.server.event_center.APICaller.make_post_call', return_value=RESPONSE_OK)
+    create_registrant(callback_url, channel, 1, [test_event])
+    create_registrant(callback_url, channel, 1, [])
+
+    expected_registrants = {
+        "registrants": {}
+    }
+
+    # Test
+    event_registration_manager.unregister_all(callback_url)
+
+    # Verify
+    time.sleep(0.1)
+    validate_expected_registrant_count(0)
+    validate_file_exists(filepath)
+    validate_file_content(filepath, json.dumps(expected_registrants))
+
+
+def test_unregister_all__when_registered_for_event_and_all_events__on_same_channel__have_other_registrants(mocker):
+    # Objective:
+    # Registrant's registrations are not in memory nor persisted.
+    # Other registrants are still there in memory and persisted.
+
+    # Setup
+    filepath = Properties.get('REGISTRANTS_FILE_PATH')
+
+    channel = ''
+    test_event = 'test_event'
+    mocker.patch('eventcenter.server.event_center.APICaller.make_post_call', return_value=RESPONSE_OK)
+    create_registrant(callback_url, channel, 1, [test_event])
+
+    test_url = 'http://localhost:1000'
+    create_registrant(test_url, channel, 2, [test_event])
+    create_registrant(test_url, channel, 2, [])
+
+    expected_registrants = {
+        "registrants": {
+            callback_url: {
+                channel: [
+                    test_event
+                ]
+            }
+        }
+    }
+
+    # Test
+    event_registration_manager.unregister_all(test_url)
+
+    # Verify
+    time.sleep(0.1)
+    validate_expected_registrant_count(1)
+    validate_have_registrant(callback_url)
+    validate_file_exists(filepath)
+    validate_file_content(filepath, json.dumps(expected_registrants))
+
+
+def test_unregister_all__when_registered_for_events__on_multiple_channels__no_other_registrants(mocker):
+    # Objective:
+    # Registrant's registrations are not in memory nor persisted.
+
+    # Setup
+    filepath = Properties.get('REGISTRANTS_FILE_PATH')
+
+    channel = 'ch-1'
+    channel2 = 'ch-2'
+    test_event1 = 'test_event1'
+    test_event2 = 'test_event2'
+    mocker.patch('eventcenter.server.event_center.APICaller.make_post_call', return_value=RESPONSE_OK)
+    create_registrant(callback_url, channel, 1, [test_event1])
+    create_registrant(callback_url, channel, 1, [])
+    create_registrant(callback_url, channel2, 1, [test_event1, test_event2])
+
+    expected_registrants = {
+        "registrants": {}
+    }
+
+    # Test
+    event_registration_manager.unregister_all(callback_url)
+
+    # Verify
+    time.sleep(0.1)
+    validate_expected_registrant_count(0)
+    validate_file_exists(filepath)
+    validate_file_content(filepath, json.dumps(expected_registrants))
+
+
+def create_registrant(url: str, channel: str, expected_registrant_count: int, events: [str]):
+    data = RegistrationData(url, events, channel)
+    event_registration_manager.register(data)
+    validate_expected_registrant_count(expected_registrant_count)
+    validate_have_registrant(url)
+
+
+def create_registrant_with_data(data: RegistrationData, url: str, expected_registrant_count: int):
+    event_registration_manager.register(data)
+    validate_expected_registrant_count(expected_registrant_count)
+    validate_have_registrant(url)
 
 
 def test_post():

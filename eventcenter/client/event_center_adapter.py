@@ -37,6 +37,13 @@ class EventCenterAdapter(FlaskAppRunner):
     def unregister(self, events: [str], channel: str = ''):
         self.__register(events, channel, is_register=False)
 
+    def unregister_all(self):
+        url = self.event_center_url + '/unregister_all'
+        data = {
+            'callback_url': self.callback_url
+        }
+        APICaller.make_post_call(url, data, is_suppress_connection_error=True)
+
     def post_event(self, event: Event, channel: str = ''):
         url = self.event_center_url + '/post_event'
         event.payload['sender_url'] = f'{self.url}'
