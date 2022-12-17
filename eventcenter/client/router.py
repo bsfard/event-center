@@ -40,9 +40,6 @@ class EventRouter:
     def on_internal_event(self, event: Event):
         self.__log_message_got_internal_event(event)
 
-        if event.name == 'worker.started':
-            x = 5
-
         # Check if event originated from outside (if so, no need to propagate it out again).
         if EventRouter.__EXTERNAL_EVENT_ID in event.payload and EventRouter.__EXTERNAL_EVENT_TIME in event.payload:
             self.__log_message_not_propagating_event__originated_outside(event)
