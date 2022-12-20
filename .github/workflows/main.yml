@@ -1,11 +1,12 @@
 name: Docker Image Build and Tag Before and After Build 
 
 on:
-  workflow_dispatch:
   push:
-    branches: [ "jr0013909-#1123" ]
+    branches: [ "jr0013909-#1123-1" ]
+  workflow_dispatch: 
   pull_request:
-    branches: [ "jr0013909-#1123" ]
+    branches: [ "jr0013909-#1123-1" ]
+  
 
 jobs:
 
