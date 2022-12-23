@@ -9,6 +9,8 @@ name: Event Center Package
 on:
   push:
     branches: [ "ben-github-actions-test" ]
+  pull_request:
+    branches: [ "ben-github-actions-test" ]
 
 jobs:
   build:
