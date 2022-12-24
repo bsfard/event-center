@@ -28,7 +28,7 @@ def setup_module():
 
 
 def setup_function():
-    global event_registration_manager
+    global event_registration_manager, event_dispatch
 
     event_dispatch.clear_event_log()
     event_dispatch.clear_registered_handlers()
@@ -156,6 +156,7 @@ def test_register__when_not_registered__registering_for_events():
     # Registrant, channel, and events are properly persisted.
 
     # Setup
+    global event_registration_manager
     filepath = Properties.get('REGISTRANTS_FILE_PATH')
     channel = ''
     test_event1 = 'test_event1'
@@ -188,6 +189,7 @@ def test_register__when_not_registered__registering_for_all_events():
     # Registrant, channel, and events are properly persisted.
 
     # Setup
+    global event_registration_manager
     filepath = Properties.get('REGISTRANTS_FILE_PATH')
     channel = ''
     data = RegistrationData(callback_url, [], channel)
@@ -219,6 +221,7 @@ def test_register__when_registered__registering_for_same_event():
     # Existing registrant is unchanged.
 
     # Setup
+    global event_registration_manager
     channel = ''
     test_event = 'test_event'
     data = RegistrationData(callback_url, [test_event], channel)
@@ -237,6 +240,7 @@ def test_register__when_registered__registering_for_different_event():
     # Existing registrant is used and gets an additional event registered.
 
     # Setup
+    global event_registration_manager
     channel = ''
     test_event1 = 'test_event1'
     test_event2 = 'test_event2'
@@ -257,6 +261,7 @@ def test_unregister__when_not_registered():
     # Nothing is done.
 
     # Setup
+    global event_registration_manager
     channel = ''
     test_event = 'test_event'
     data = RegistrationData(callback_url, [test_event], channel)
@@ -273,6 +278,7 @@ def test_unregister__when_registered_for_event__unregistering_for_event():
     # Registrant is removed from list.
 
     # Setup
+    global event_registration_manager
     channel = ''
     test_event = 'test_event'
     data = RegistrationData(callback_url, [test_event], channel)
@@ -290,6 +296,7 @@ def test_unregister__when_registered_for_multiple_events__unregistering_for_some
     # Registrant is not removed from list.
 
     # Setup
+    global event_registration_manager
     channel = ''
     test_event1 = 'test_event1'
     test_event2 = 'test_event2'
@@ -310,6 +317,7 @@ def test_unregister__when_registered_for_all_events():
     # Registrant is removed from list.
 
     # Setup
+    global event_registration_manager
     channel = ''
     data = RegistrationData(callback_url, [], channel)
     create_registrant_with_data(data, callback_url, 1)
@@ -327,6 +335,7 @@ def test_unregister_all__when_not_registered__no_other_registrants():
     # Nothing happens, no registrants are in memory and persisted.
 
     # Setup
+    global event_registration_manager
     filepath = Properties.get('REGISTRANTS_FILE_PATH')
     validate_expected_registrant_count(0)
 
@@ -348,6 +357,7 @@ def test_unregister_all__when_not_registered__have_other_registrants():
     # Nothing happens, other registrants are still there in memory and persisted.
 
     # Setup
+    global event_registration_manager
     filepath = Properties.get('REGISTRANTS_FILE_PATH')
     callback_url1 = 'some_other_url'
 
@@ -379,6 +389,7 @@ def test_unregister_all__when_registered_for_event_and_all_events__on_same_chann
     # Registrant's registrations are not in memory nor persisted.
 
     # Setup
+    global event_registration_manager
     filepath = Properties.get('REGISTRANTS_FILE_PATH')
 
     channel = ''
@@ -407,6 +418,7 @@ def test_unregister_all__when_registered_for_event_and_all_events__on_same_chann
     # Other registrants are still there in memory and persisted.
 
     # Setup
+    global event_registration_manager
     filepath = Properties.get('REGISTRANTS_FILE_PATH')
 
     channel = ''
@@ -444,6 +456,7 @@ def test_unregister_all__when_registered_for_events__on_multiple_channels__no_ot
     # Registrant's registrations are not in memory nor persisted.
 
     # Setup
+    global event_registration_manager
     filepath = Properties.get('REGISTRANTS_FILE_PATH')
 
     channel = 'ch-1'
@@ -470,6 +483,8 @@ def test_unregister_all__when_registered_for_events__on_multiple_channels__no_ot
 
 
 def create_registrant(url: str, channel: str, expected_registrant_count: int, events: [str]):
+    global event_registration_manager
+
     data = RegistrationData(url, events, channel)
     event_registration_manager.register(data)
     validate_expected_registrant_count(expected_registrant_count)
@@ -477,6 +492,8 @@ def create_registrant(url: str, channel: str, expected_registrant_count: int, ev
 
 
 def create_registrant_with_data(data: RegistrationData, url: str, expected_registrant_count: int):
+    global event_registration_manager
+
     event_registration_manager.register(data)
     validate_expected_registrant_count(expected_registrant_count)
     validate_have_registrant(url)
@@ -500,6 +517,7 @@ def test_post__when_have_channel():
 
 def run_test_post(channel: str = ''):
     # Setup
+    global event_registration_manager
     event = Event('test_event')
     remote_event_data = RemoteEventData(channel, event)
     if channel:
@@ -526,6 +544,7 @@ def test_post__when_channel_not_exist():
     # Event dispatch is created (exists now) for new channel
 
     # Setup
+    global event_registration_manager
     channel = "none-existent-channel"
     event = Event('test_event')
     remote_event_data = RemoteEventData(channel, event)
@@ -546,6 +565,7 @@ def test_on_event__when_callback_failed():
     # Unreachable client is unregistered from given event.
 
     # Setup
+    global event_registration_manager
     channel = ''
     test_event = 'test_event'
     data = RegistrationData(callback_url, [test_event], channel)
@@ -566,10 +586,14 @@ def test_on_event__when_callback_failed():
 
 
 def validate_expected_registrant_count(expected_count: int, manager: EventRegistrationManager = None):
+    global event_registration_manager
+
     manager = manager if manager else event_registration_manager
     assert len(manager.registrants) == expected_count
 
 
 def validate_have_registrant(evt_receiver: str, manager: EventRegistrationManager = None):
+    global event_registration_manager
+
     manager = manager if manager else event_registration_manager
     assert manager.get_registrant(evt_receiver)

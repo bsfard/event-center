@@ -81,6 +81,7 @@ def test_on_internal_event__when_unregistration_event(mocker):
     # Event is unregistered with Event Center.
 
     # Setup
+    global handler1, event_router
     test_event = 'test_event'
     test_channel = ''
     event = Event(EventDispatchEvent.HANDLER_UNREGISTERED.namespaced_value, {
@@ -101,6 +102,7 @@ def test_on_internal_event__when_non_registration_event(mocker):
     # Event is posted to Event Center.
 
     # Setup
+    global event_router
     test_channel = ''
     event = Event('test_event', {
         'name': 'Alice'
@@ -119,6 +121,7 @@ def test_on_external_event():
     # Event is posted to local_clients Event Dispatch, and locally registered handler receives it.
 
     # Setup
+    global handler1, event_router
     test_channel = ''
     event = Event('test_event', {
         'name': 'Alice'

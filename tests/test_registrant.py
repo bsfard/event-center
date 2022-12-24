@@ -17,7 +17,7 @@ def setup_module():
 
 
 def setup_function():
-    global registrant
+    global event_dispatch, registrant
 
     event_dispatch.clear_event_log()
     event_dispatch.clear_registered_handlers()
@@ -39,6 +39,7 @@ def test_register__when_not_registered__registering_for_event(mocker):
     # Registration is created for event.
 
     # Setup
+    global registrant
     channel = ''
     test_event = 'test_event'
     mocker.patch('eventcenter.server.event_center.APICaller.make_post_call', return_value=RESPONSE_OK)
@@ -56,6 +57,7 @@ def test_register__when_not_registered__registering_for_all_events(mocker):
     # Registration is created for all events.
 
     # Setup
+    global registrant
     channel = ''
     mocker.patch('eventcenter.server.event_center.APICaller.make_post_call', return_value=RESPONSE_OK)
 
@@ -72,6 +74,7 @@ def test_register__when_already_registered_for_event():
     # New registration is not created.
 
     # Setup
+    global registrant
     channel = ''
     test_event = 'test_event'
     create_registration(channel, test_event, 1)
@@ -89,6 +92,7 @@ def test_unregister__when_not_registered_for_event__registered_for_other_events(
     # Other registrations are not cancelled, registration list remains the same.
 
     # Setup
+    global registrant
     channel = ''
     test_event1 = 'test_event1'
     test_event2 = 'test_event2'
@@ -108,6 +112,7 @@ def test_unregister__when_registered_for_event_and_other_events():
     # Other registrations are not cancelled.
 
     # Setup
+    global registrant
     channel = ''
     test_event1 = 'test_event1'
     test_event2 = 'test_event2'
@@ -127,6 +132,7 @@ def test_unregister__when_registered_for_event():
     # Registration is cancelled for event, registration object is removed from list.
 
     # Setup
+    global registrant
     channel = ''
     test_event = 'test_event'
     create_registration(channel, test_event, 1)
@@ -144,6 +150,7 @@ def test_unregister__when_registered_for_all_events(mocker):
     # Registration is cancelled for all events, registration object is removed from list.
 
     # Setup
+    global registrant
     channel = ''
     mocker.patch('eventcenter.server.event_center.APICaller.make_post_call', return_value=RESPONSE_OK)
     create_registration(channel, None, 1)
@@ -161,6 +168,7 @@ def test_unregister_all__when_not_registered():
     # No exception occurs.
 
     # Setup
+    global registrant
     channel = ''
     validate_expected_registration_count(channel, 0)
 
@@ -177,6 +185,7 @@ def test_unregister_all__when_registered_for_event():
     # All registrations for registrant are deleted.
 
     # Setup
+    global registrant
     channel = ''
     test_event = 'test_event'
     create_registration(channel, test_event, 1)
@@ -194,6 +203,7 @@ def test_unregister_all__when_registered_for_all_events():
     # All registrations for registrant are deleted.
 
     # Setup
+    global registrant
     channel = ''
     create_registration(channel, None, 1)
 
@@ -210,6 +220,7 @@ def test_unregister_all__when_registered_for_events_and_all_events(mocker):
     # All registrations for registrant are deleted.
 
     # Setup
+    global registrant
     channel = ''
     test_event = 'test_event'
     mocker.patch('eventcenter.server.event_center.APICaller.make_post_call', return_value=RESPONSE_OK)
@@ -229,12 +240,16 @@ def test_unregister_all__when_registered_for_events_and_all_events(mocker):
 
 
 def create_registration(channel: str, event: str = None, expected_count: int = 0):
+    global registrant
+
     registrant.register(event, channel)
     validate_expected_registration_count(channel, expected_count)
     validate_registered_channel_and_event(channel, event)
 
 
 def validate_registered_channel_and_event(channel: str = '', event: str = None):
+    global registrant
+
     event = event if event else ''
 
     assert channel in registrant.registrations
@@ -249,4 +264,5 @@ def validate_registered_channel_and_event(channel: str = '', event: str = None):
 
 
 def validate_expected_registration_count(channel: str, expected_count):
+    global registrant
     assert len(registrant.registrations.get(channel, [])) == expected_count

@@ -28,6 +28,7 @@ def setup_function():
 
 
 def teardown_function():
+    global adapter
     adapter.shutdown()
 
 
@@ -40,6 +41,7 @@ def test_init():
     # Adapter is created, no exceptions are raised.
 
     # Setup
+    global adapter
     host = Properties.get('EVENT_CENTER_CALLBACK_HOST')
     port = str(Properties.get('EVENT_CENTER_CALLBACK_PORT'))
 
@@ -87,6 +89,7 @@ def test_register__when_all_events__with_channels(mocker):
 
 def run_test__register(mocker, events: [str], channel: str = ''):
     # Setup
+    global adapter
     mock_call = mocker.patch('eventcenter.client.event_center_adapter.APICaller.make_post_call',
                              return_value=RESPONSE_OK)
 
@@ -133,6 +136,7 @@ def test_unregister__when_all_events__with_events(mocker):
 
 def run_test__unregister(mocker, events: [str], channel: str = ''):
     # Setup
+    global adapter
     mock_call = mocker.patch('eventcenter.client.event_center_adapter.APICaller.make_post_call',
                              return_value=RESPONSE_OK)
 
@@ -163,6 +167,7 @@ def test_post_event__with_channel(mocker):
 
 def run_test_post_event(mocker, channel: str = ''):
     # Setup
+    global adapter
     event = Event('test_event', {'name': 'Alice'})
     remote_event = RemoteEventData(channel, event)
     mock_call = mocker.patch('eventcenter.client.event_center_adapter.APICaller.make_post_call',

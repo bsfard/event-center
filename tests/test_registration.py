@@ -23,7 +23,7 @@ def setup_module():
 
 
 def setup_function():
-    global handler
+    global handler, event_dispatch
 
     event_dispatch.clear_event_log()
     event_dispatch.clear_registered_handlers()
@@ -67,6 +67,7 @@ def run_test_init__when_registering_for_event(channel: str = ''):
     # Registration's handler is registered with event dispatch.
 
     # Setup
+    global event_dispatch
     callback_url = 'url'
     test_event = 'test_event'
 
@@ -105,6 +106,7 @@ def run_test_init__when_registering_for_all_events(mocker, channel: str = ''):
     # Registration's handler is registered with event dispatch.
 
     # Setup
+    global event_dispatch
     callback_url = 'url'
     mock_call = mocker.patch('eventcenter.server.event_center.APICaller.make_post_call', return_value=RESPONSE_OK)
 
@@ -143,6 +145,7 @@ def run_test_cancel__when_registered_for_event(channel: str = ''):
     # Registration's handler is unregistered with event dispatch.
 
     # Setup
+    global event_dispatch
     callback_url = 'url'
     test_event = 'test_event'
     reg = Registration(callback_url, test_event, channel)
@@ -182,6 +185,7 @@ def run_test_cancel__when_registered_for_all_events(mocker, channel: str = ''):
     # Registration's handler is unregistered with event dispatch.
 
     # Setup
+    global event_dispatch
     callback_url = 'url'
     mock_call = mocker.patch('eventcenter.server.event_center.APICaller.make_post_call', return_value=RESPONSE_OK)
     reg = Registration(callback_url)
@@ -224,6 +228,7 @@ def run_test_on_event__when_reachable_client(mocker, channel: str = ''):
     # Remote handler's API is called, with event object.
 
     # Setup
+    global event_dispatch
     callback_url = 'url'
     mock_call = mocker.patch('eventcenter.server.event_center.APICaller.make_post_call', return_value=RESPONSE_OK)
     reg = Registration(callback_url, channel=channel)
@@ -269,6 +274,7 @@ def run_test_on_event__when_unreachable_client(channel: str = ''):
     # Event sent about unreachable client.
 
     # Setup
+    global event_dispatch, handler
     callback_url = 'http://localhost:9999/some/nonexisting/endpoint'
     test_event = 'test_event'
     reg = Registration(callback_url, test_event, channel=channel)
