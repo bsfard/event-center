@@ -31,7 +31,7 @@ class EventRouter:
             self.__channel = Properties.get('ROUTER_CHANNEL')
         except PropertyNotSetError:
             self.__channel = ''
-            
+
         self.__event_service_adapter.unregister_all()
 
         # Register for all internal events, to propagate out.
