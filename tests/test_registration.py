@@ -4,7 +4,7 @@ from eventdispatch import EventDispatch, Properties, EventDispatchManager, Event
 
 from eventcenter.server.event_center import Registration, RemoteEventData, RegistrationEvent
 from eventcenter.server.service import RESPONSE_OK
-from test_helper import validate_handler_registered_for_event, validate_expected_handler_count, \
+from helper import validate_handler_registered_for_event, validate_expected_handler_count, \
     TestEventHandler, validate_received_events
 
 SOME_CHANNEL = 'some_channel'

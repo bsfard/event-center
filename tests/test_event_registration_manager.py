@@ -8,7 +8,7 @@ from eventdispatch import Properties, Event, EventDispatch, EventDispatchManager
 from eventcenter.server.event_center import EventRegistrationManager, RegistrationEvent, RegistrationData, \
     RemoteEventData
 from eventcenter.server.service import RESPONSE_OK
-from test_helper import validate_file_exists, validate_file_not_exists, validate_file_content, validate_event_log_count
+from helper import validate_file_exists, validate_file_not_exists, validate_file_content, validate_event_log_count
 
 SOME_CHANNEL = 'some_channel'
 

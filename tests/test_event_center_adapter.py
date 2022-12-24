@@ -3,7 +3,7 @@ from eventdispatch import Event, Properties
 from eventcenter.client.event_center_adapter import EventCenterAdapter
 from eventcenter.server.event_center import RegistrationData, RemoteEventData
 from eventcenter.server.service import RESPONSE_OK
-from test_helper import TestEventHandler, prep_default_event_dispatch, set_properties_for_event_center_interfacing, \
+from helper import TestEventHandler, prep_default_event_dispatch, set_properties_for_event_center_interfacing, \
     default_event_dispatch
 
 SOME_CHANNEL = 'some_channel'

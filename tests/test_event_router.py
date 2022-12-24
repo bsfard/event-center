@@ -5,7 +5,7 @@ from eventdispatch.core import EventDispatchEvent
 
 from eventcenter import EventRouter
 from eventcenter.server.event_center import RemoteEventData
-from test_helper import validate_expected_handler_count, validate_handler_registered_for_event, \
+from helper import validate_expected_handler_count, validate_handler_registered_for_event, \
     validate_event_log_count, TestEventHandler, validate_received_events, register_handler_for_event, \
     prep_default_event_dispatch, set_properties_for_event_center_interfacing, default_event_dispatch
 

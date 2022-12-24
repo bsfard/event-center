@@ -5,7 +5,7 @@ import pytest
 from eventdispatch import EventDispatch, Event, Properties
 from eventdispatch.core import EventDispatchEvent, register_for_events, EventDispatchManager
 
-from test_constants import EVENT_CENTER_PORT
+from constants import EVENT_CENTER_PORT
 
 default_event_dispatch: EventDispatch = EventDispatchManager().default_dispatch
 
