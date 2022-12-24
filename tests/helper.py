@@ -10,7 +10,7 @@ from constants import EVENT_CENTER_PORT
 default_event_dispatch: EventDispatch = EventDispatchManager().default_dispatch
 
 
-class TestEventHandler:
+class EventHandler:
     def __init__(self):
         self.received_events = {}
 
@@ -63,11 +63,11 @@ def validate_expected_handler_count(expected_count: int, event_dispatch: EventDi
     assert get_handler_count(event_dispatch) == expected_count
 
 
-def validate_handler_registered_for_all_events(handler: TestEventHandler):
+def validate_handler_registered_for_all_events(handler: EventHandler):
     validate_test_handler_registered_for_event(handler, None)
 
 
-def validate_test_handler_registered_for_event(handler: TestEventHandler, event: str = None):
+def validate_test_handler_registered_for_event(handler: EventHandler, event: str = None):
     validate_handler_registered_for_event(handler.on_event, event)
 
 
@@ -82,7 +82,7 @@ def validate_handler_registered_for_event(handler: Callable, event: str = None, 
     assert handler in handlers
 
 
-def validate_received_events(handler: TestEventHandler, expected_events: [Any], is_ignore_registration_event=True):
+def validate_received_events(handler: EventHandler, expected_events: [Any], is_ignore_registration_event=True):
     expected_events = EventDispatch.to_string_events(expected_events)
     registration_event = EventDispatch.to_string_event(EventDispatchEvent.HANDLER_REGISTERED)
     if is_ignore_registration_event:
@@ -101,7 +101,7 @@ def validate_received_events(handler: TestEventHandler, expected_events: [Any], 
         handler.received_events.pop(event)
 
 
-def validate_received_event(handler: TestEventHandler, expected_event: str, expected_payload: dict):
+def validate_received_event(handler: EventHandler, expected_event: str, expected_payload: dict):
     for name, event in handler.received_events.items():
         if name == expected_event:
             if event.payload.keys() == expected_payload.keys():

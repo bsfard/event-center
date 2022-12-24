@@ -5,12 +5,12 @@ from eventdispatch import EventDispatch, Properties, EventDispatchManager, Event
 from eventcenter.server.event_center import Registration, RemoteEventData, RegistrationEvent
 from eventcenter.server.service import RESPONSE_OK
 from helper import validate_handler_registered_for_event, validate_expected_handler_count, \
-    TestEventHandler, validate_received_events
+    EventHandler, validate_received_events
 
 SOME_CHANNEL = 'some_channel'
 
 event_dispatch: EventDispatch
-handler: TestEventHandler
+handler: EventHandler
 
 
 def setup_module():
@@ -28,7 +28,7 @@ def setup_function():
     event_dispatch.clear_event_log()
     event_dispatch.clear_registered_handlers()
 
-    handler = TestEventHandler()
+    handler = EventHandler()
 
 
 def teardown_function():

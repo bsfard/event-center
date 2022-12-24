@@ -6,11 +6,11 @@ from eventdispatch.core import EventDispatchEvent
 from eventcenter import EventRouter
 from eventcenter.server.event_center import RemoteEventData
 from helper import validate_expected_handler_count, validate_handler_registered_for_event, \
-    validate_event_log_count, TestEventHandler, validate_received_events, register_handler_for_event, \
+    validate_event_log_count, EventHandler, validate_received_events, register_handler_for_event, \
     prep_default_event_dispatch, set_properties_for_event_center_interfacing, default_event_dispatch
 
 event_router: EventRouter
-handler1: TestEventHandler
+handler1: EventHandler
 
 
 def setup_module():
@@ -25,7 +25,7 @@ def setup_function():
     default_event_dispatch.clear_registered_handlers()
 
     event_router = EventRouter()
-    handler1 = TestEventHandler()
+    handler1 = EventHandler()
 
 
 def teardown_function():

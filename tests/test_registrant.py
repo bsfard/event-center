@@ -22,7 +22,7 @@ def setup_function():
     event_dispatch.clear_event_log()
     event_dispatch.clear_registered_handlers()
 
-    registrant = Registrant('url')
+    registrant = Registrant('http://localhost')
     validate_expected_registration_count('', 0)
 
 
@@ -205,13 +205,14 @@ def test_unregister_all__when_registered_for_all_events():
     assert channel not in registrant.registrations
 
 
-def test_unregister_all__when_registered_for_events_and_all_events():
+def test_unregister_all__when_registered_for_events_and_all_events(mocker):
     # Objective:
     # All registrations for registrant are deleted.
 
     # Setup
     channel = ''
     test_event = 'test_event'
+    mocker.patch('eventcenter.server.event_center.APICaller.make_post_call', return_value=RESPONSE_OK)
     create_registration(channel, test_event, 1)
     create_registration(channel, None, 2)
 

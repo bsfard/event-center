@@ -3,13 +3,13 @@ from eventdispatch import Event, Properties
 from eventcenter.client.event_center_adapter import EventCenterAdapter
 from eventcenter.server.event_center import RegistrationData, RemoteEventData
 from eventcenter.server.service import RESPONSE_OK
-from helper import TestEventHandler, prep_default_event_dispatch, set_properties_for_event_center_interfacing, \
+from helper import EventHandler, prep_default_event_dispatch, set_properties_for_event_center_interfacing, \
     default_event_dispatch
 
 SOME_CHANNEL = 'some_channel'
 
 adapter: EventCenterAdapter
-handler1: TestEventHandler
+handler1: EventHandler
 
 
 def setup_module():
@@ -23,7 +23,7 @@ def setup_function():
     default_event_dispatch.clear_event_log()
     default_event_dispatch.clear_registered_handlers()
 
-    handler1 = TestEventHandler()
+    handler1 = EventHandler()
     adapter = EventCenterAdapter(handler1.on_event)
 
 
