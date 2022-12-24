@@ -39,4 +39,4 @@ jobs:
         echo "PYTHONPATH=../" >> $GITHUB_ENV
     - name: Test with pytest
       run: |
-        pytest tests/
+        PYTHONPATH=../ pytest tests/
