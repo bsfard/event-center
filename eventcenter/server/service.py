@@ -40,6 +40,10 @@ class EventCenterService(FlaskAppRunner):
 
         post_event(ECEvent.STARTED, {})
 
+        @app.route('/ping', methods=['GET'])
+        def ping():
+            return RESPONSE_OK
+
         @app.route('/register', methods=['POST'])
         def register():
             registration_data = RegistrationData.from_dict(request.json)
