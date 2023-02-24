@@ -3,8 +3,8 @@ import threading
 from typing import Any, Dict
 
 import requests
-from eventdispatch import NotifiableError
-from flask import Flask
+from eventdispatch import NotifiableError, PropertyNotSetError, Properties
+from flask import Flask, make_response
 from werkzeug.serving import make_server
 
 HEADERS = {'Content-Type': 'application/json'}
@@ -13,6 +13,11 @@ HEADERS = {'Content-Type': 'application/json'}
 class FlaskAppRunner(threading.Thread):
     def __init__(self, host: str, port: int, app: Flask):
         super().__init__()
+
+        try:
+            self.is_allow_cors = Properties.get('ALLOW_CORS') == True
+        except PropertyNotSetError:
+            self.is_allow_cors = False
 
         # Silence logging from flask and requests libraries.
         logging.getLogger('werkzeug').setLevel(logging.WARNING)
@@ -25,6 +30,12 @@ class FlaskAppRunner(threading.Thread):
         self.ctx = app.app_context()
         self.ctx.push()
 
+    def make_response(self, response: Any):
+        if self.is_allow_cors:
+            response = make_response(response)
+            response.headers.add('Access-Control-Allow-Origin', '*')
+        return response
+
     def run(self):
         self.logger.debug(f"Starting flask app '{self.app.name}'")
         self.server.serve_forever()
@@ -36,7 +47,7 @@ class FlaskAppRunner(threading.Thread):
 
 class APICaller:
     @staticmethod
-    def make_post_call(url: str, body: Dict[str, Any], headers: Dict[str, Any] = None,
+    def make_post_call(url: str, data: Dict[str, Any] = None, json: str = None, headers: Dict[str, Any] = None,
                        session: requests.Session = None,
                        timeout_sec: float = None,
                        is_suppress_connection_error: bool = False) -> requests.Response:
@@ -45,21 +56,21 @@ class APICaller:
         try:
             if session:
                 if timeout_sec:
-                    response = session.post(url, json=body, headers=headers, timeout=timeout_sec)
+                    response = session.post(url, data=data, json=json, headers=headers, timeout=timeout_sec)
                 else:
-                    response = session.post(url, json=body, headers=headers)
+                    response = session.post(url, data=data, json=json, headers=headers)
             else:
                 if timeout_sec:
-                    response = requests.post(url, json=body, headers=headers, timeout=timeout_sec)
+                    response = requests.post(url, data=data, json=json, headers=headers, timeout=timeout_sec)
                 else:
-                    response = requests.post(url, json=body, headers=headers)
+                    response = requests.post(url, data=data, json=json, headers=headers)
 
             APICaller.__validate_response_ok(url, response)
             return response
 
         except requests.exceptions.ConnectionError:
             if not is_suppress_connection_error:
-                raise ApiConnectionError(url, body)
+                raise ApiConnectionError(url, data, json)
 
     @staticmethod
     def make_get_call(url: str, params: Dict[str, Any], headers: Dict[str, Any] = None,
@@ -78,7 +89,7 @@ class APICaller:
 
         except requests.exceptions.ConnectionError:
             if not is_suppress_connection_error:
-                raise ApiConnectionError(url, {})
+                raise ApiConnectionError(url, {}, '')
 
     @staticmethod
     def __remove_empty_params(params):
@@ -93,13 +104,13 @@ class APICaller:
 class ApiConnectionError(NotifiableError):
     """Raised when connection to API cannot be established"""
 
-    def __init__(self, url: str, body: Dict[str, Any]):
+    def __init__(self, url: str, data: Dict[str, Any], json: str):
         message = ''
-        # message = f'\nURL: {url}\nBody: {body}'
         error = 'api_connection_error'
         payload = {
             'url': url,
-            'body': body
+            'data': data,
+            'json': json
         }
         super().__init__(message, error, payload)
 

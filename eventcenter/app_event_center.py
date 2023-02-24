@@ -28,6 +28,7 @@ def get_program_args():
     parser.add_argument('--port', '-p')
     parser.add_argument('--registrants_path', '-rp')
     parser.add_argument('--timeout_sec', '-t')
+    parser.add_argument('--allow_cors', '-ac')
     program_args = vars(parser.parse_args(sys.argv[1:]))
 
 
@@ -35,6 +36,7 @@ def set_properties():
     Properties.set('EVENT_CENTER_PORT', program_args.get('port') or DEFAULT_PORT)
     Properties.set('REGISTRANTS_FILE_PATH', program_args.get('registrants_path') or DEFAULT_REGISTRANTS_FILE_PATH)
     Properties.set('CLIENT_CALLBACK_TIMEOUT_SEC', program_args.get('timeout_sec') or DEFAULT_CALLBACK_TIMEOUT_SEC)
+    Properties.set('ALLOW_CORS', program_args.get('allow_cors') == '1')
 
 
 if __name__ == '__main__':

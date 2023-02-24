@@ -177,15 +177,16 @@ class EventRegistrationManager:
 
     def __persist_registrants(self):
         with open(self.__registrants_file_path, 'w') as file:
-            registrants = {}
-            for callback_url, registrant in self.__registrants.items():
-                registrants[callback_url] = {}
-                for channel, registrations in registrant.registrations.items():
-                    events = [] if len(registrations) == 0 else [event for event in registrations]
-                    registrants[callback_url][channel] = events
-            json.dump({
-                self.__REGISTRANTS_KEY: registrants
-            }, file)
+            json.dump(self.pack_registrants(), file)
+
+    def pack_registrants(self) -> Dict[str, Any]:
+        registrants = {}
+        for callback_url, registrant in self.__registrants.items():
+            registrants[callback_url] = {}
+            for channel, registrations in registrant.registrations.items():
+                events = [] if len(registrations) == 0 else [event for event in registrations]
+                registrants[callback_url][channel] = events
+        return {self.__REGISTRANTS_KEY: registrants}
 
     def __handle_unreachable_client(self, event: Event):
         callback_url = event.payload.get('callback_url')

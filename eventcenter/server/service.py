@@ -42,19 +42,19 @@ class EventCenterService(FlaskAppRunner):
 
         @app.route('/ping', methods=['GET'])
         def ping():
-            return RESPONSE_OK
+            return self.make_response(RESPONSE_OK)
 
         @app.route('/register', methods=['POST'])
         def register():
             registration_data = RegistrationData.from_dict(request.json)
             self.__event_registration_manager.register(registration_data)
-            return RESPONSE_OK
+            return self.make_response(RESPONSE_OK)
 
         @app.route('/unregister', methods=['POST'])
         def unregister():
             registration_data = RegistrationData.from_dict(request.json)
             self.__event_registration_manager.unregister(registration_data)
-            return RESPONSE_OK
+            return self.make_response(RESPONSE_OK)
 
         @app.route('/unregister_all', methods=['POST'])
         def unregister_all():
@@ -64,13 +64,20 @@ class EventCenterService(FlaskAppRunner):
                 return RESPONSE_ERROR
 
             self.__event_registration_manager.unregister_all(callback_url)
-            return RESPONSE_OK
+            return self.make_response(RESPONSE_OK)
 
         @app.route('/post_event', methods=['POST'])
         def post():
             remote_event_data = RemoteEventData.from_dict(request.json)
             self.__event_registration_manager.post(remote_event_data)
-            return RESPONSE_OK
+            return self.make_response(RESPONSE_OK)
+
+        # Admin APIs
+        @app.route('/registrants', methods=['GET'])
+        def get_registrants():
+            response = self.__event_registration_manager.pack_registrants()
+            response.update(RESPONSE_OK)
+            return self.make_response(response)
 
         @app.route('/shutdown', methods=['GET'])
         def shutdown():
