@@ -33,30 +33,32 @@ class EventCenterService(FlaskAppRunner):
     def __init__(self):
         self.__event_registration_manager = EventRegistrationManager()
 
-        app = Flask('EventCenter')
+        self.app = Flask('EventCenter')
         port = Properties.get('EVENT_CENTER_PORT')
-        super().__init__('0.0.0.0', port, app)
-        self.start()
+        super().__init__('0.0.0.0', port, self.app)
+
+        if not self.is_flask_debug():
+            self.start()
 
         post_event(ECEvent.STARTED, {})
 
-        @app.route('/ping', methods=['GET'])
+        @self.app.route('/ping', methods=['GET'])
         def ping():
             return self.make_response(RESPONSE_OK)
 
-        @app.route('/register', methods=['POST'])
+        @self.app.route('/register', methods=['POST'])
         def register():
             registration_data = RegistrationData.from_dict(request.json)
             self.__event_registration_manager.register(registration_data)
             return self.make_response(RESPONSE_OK)
 
-        @app.route('/unregister', methods=['POST'])
+        @self.app.route('/unregister', methods=['POST'])
         def unregister():
             registration_data = RegistrationData.from_dict(request.json)
             self.__event_registration_manager.unregister(registration_data)
             return self.make_response(RESPONSE_OK)
 
-        @app.route('/unregister_all', methods=['POST'])
+        @self.app.route('/unregister_all', methods=['POST'])
         def unregister_all():
             callback_url = request.json.get('callback_url', '')
             if not callback_url:
@@ -66,20 +68,20 @@ class EventCenterService(FlaskAppRunner):
             self.__event_registration_manager.unregister_all(callback_url)
             return self.make_response(RESPONSE_OK)
 
-        @app.route('/post_event', methods=['POST'])
+        @self.app.route('/post_event', methods=['POST'])
         def post():
             remote_event_data = RemoteEventData.from_dict(request.json)
             self.__event_registration_manager.post(remote_event_data)
             return self.make_response(RESPONSE_OK)
 
         # Admin APIs
-        @app.route('/registrants', methods=['GET'])
+        @self.app.route('/registrants', methods=['GET'])
         def get_registrants():
             response = self.__event_registration_manager.pack_registrants()
             response.update(RESPONSE_OK)
             return self.make_response(response)
 
-        @app.route('/shutdown', methods=['GET'])
+        @self.app.route('/shutdown', methods=['GET'])
         def shutdown():
             threading.Thread(target=self.shutdown, args=[]).start()
             return RESPONSE_OK

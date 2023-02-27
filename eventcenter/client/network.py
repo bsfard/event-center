@@ -26,9 +26,19 @@ class FlaskAppRunner(threading.Thread):
         self.logger = logging.getLogger(app.name)
         self.app = app
 
-        self.server = make_server(host, port, app)
+        if not self.is_flask_debug():
+            self.server = make_server(host, port, app)
+
         self.ctx = app.app_context()
         self.ctx.push()
+
+    @staticmethod
+    def is_flask_debug() -> bool:
+        try:
+            p = Properties.get('FLASK_DEBUG')
+            return p == '1' or p.upper() == 'TRUE' or p.upper() == 'YES'
+        except PropertyNotSetError:
+            return False
 
     def make_response(self, response: Any):
         if self.is_allow_cors:
@@ -90,7 +100,7 @@ class APICaller:
 
         except requests.exceptions.ConnectionError:
             if not is_suppress_connection_error:
-                raise ApiConnectionError(url, {}, '')
+                raise ApiConnectionError(url, {}, {})
 
     @staticmethod
     def __remove_empty_params(params):
@@ -105,7 +115,7 @@ class APICaller:
 class ApiConnectionError(NotifiableError):
     """Raised when connection to API cannot be established"""
 
-    def __init__(self, url: str, data: Dict[str, Any], json: str):
+    def __init__(self, url: str, data: Dict[str, Any], json: Dict[str, Any]):
         message = ''
         error = 'api_connection_error'
         payload = {

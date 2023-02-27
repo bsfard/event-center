@@ -20,12 +20,14 @@ class EventCenterAdapter(FlaskAppRunner):
         self.url = f'{host}:{port}'
         self.callback_url = f'{self.url}{CALLBACK_ENDPOINT}'
 
-        app = Flask('EventCenterAdapter')
+        self.app = Flask('EventCenterAdapter')
 
-        super().__init__('0.0.0.0', port, app)
-        self.start()
+        super().__init__('0.0.0.0', port, self.app)
 
-        @app.route(CALLBACK_ENDPOINT, methods=['POST'])
+        if not self.is_flask_debug():
+            self.start()
+
+        @self.app.route(CALLBACK_ENDPOINT, methods=['POST'])
         def on_event():
             remote_event = RemoteEventData.from_dict(request.json)
             threading.Thread(target=self.event_handler, args=[remote_event]).start()

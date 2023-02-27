@@ -1,6 +1,7 @@
 import logging
 
 from eventdispatch import Event, EventDispatchEvent, register_for_events, Properties, PropertyNotSetError, post_event
+from flask import Flask
 
 from eventcenter.client.event_center_adapter import EventCenterAdapter
 from eventcenter.server.event_center import RemoteEventData
@@ -36,6 +37,10 @@ class EventRouter:
 
         # Register for all internal events, to propagate out.
         register_for_events(self.on_internal_event, [])
+
+    @property
+    def server(self) -> Flask:
+        return self.__event_service_adapter.app
 
     def on_internal_event(self, event: Event):
         self.__log_message_got_internal_event(event)
