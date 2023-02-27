@@ -47,7 +47,8 @@ class FlaskAppRunner(threading.Thread):
 
 class APICaller:
     @staticmethod
-    def make_post_call(url: str, data: Dict[str, Any] = None, json: str = None, headers: Dict[str, Any] = None,
+    def make_post_call(url: str, data: Dict[str, Any] = None, json: Dict[str, Any] = None,
+                       headers: Dict[str, Any] = None,
                        session: requests.Session = None,
                        timeout_sec: float = None,
                        is_suppress_connection_error: bool = False) -> requests.Response:

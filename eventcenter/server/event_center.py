@@ -240,7 +240,7 @@ class Registration:
         remote_event = RemoteEventData(self.__channel, event)
 
         try:
-            APICaller.make_post_call(self.__callback_url, remote_event.dict,
+            APICaller.make_post_call(self.__callback_url, json=remote_event.dict,
                                      timeout_sec=self.__client_callback_timeout_sec)
         except ApiConnectionError:
             self.__handle_unreachable_client()

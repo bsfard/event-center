@@ -42,16 +42,16 @@ class EventCenterAdapter(FlaskAppRunner):
         data = {
             'callback_url': self.callback_url
         }
-        APICaller.make_post_call(url, data, is_suppress_connection_error=True)
+        APICaller.make_post_call(url, json=data, is_suppress_connection_error=True)
 
     def post_event(self, event: Event, channel: str = ''):
         url = self.event_center_url + '/post_event'
         event.payload['sender_url'] = f'{self.url}'
         data = RemoteEventData(channel, event)
-        APICaller.make_post_call(url, data.dict, is_suppress_connection_error=True)
+        APICaller.make_post_call(url, json=data.dict, is_suppress_connection_error=True)
 
     def __register(self, events: [str], channel: str, is_register: bool = True):
         endpoint = '/register' if is_register else '/unregister'
         url = self.event_center_url + endpoint
         data = RegistrationData(self.callback_url, events, channel)
-        APICaller.make_post_call(url, data.dict, is_suppress_connection_error=True)
+        APICaller.make_post_call(url, json=data.dict, is_suppress_connection_error=True)
