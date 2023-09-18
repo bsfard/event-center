@@ -1,5 +1,6 @@
 import time
 
+import pytest
 from eventdispatch import EventDispatch, Properties, EventDispatchManager, Event
 
 from eventcenter.server.event_center import Registration, RemoteEventData, RegistrationEvent
@@ -19,7 +20,7 @@ def setup_module():
     event_dispatch = EventDispatchManager().default_dispatch
     event_dispatch.toggle_event_logging(True)
 
-    Properties.set('CLIENT_CALLBACK_TIMEOUT_SEC', 10.0, is_skip_if_exists=True)
+    Properties().set('CLIENT_CALLBACK_TIMEOUT_SEC', 10.0, is_skip_if_exists=True)
 
 
 def setup_function():
@@ -46,30 +47,18 @@ def teardown_module():
     pass
 
 
-def test_init__when_registering_for_event():
-    # Objective:
-    # Registration's handler is registered with default event dispatch.
-
-    # Test
-    run_test_init__when_registering_for_event('')
-
-
-def test_init__when_registering_for_event__with_channel():
-    # Objective:
-    # Registration's handler is registered with channel event dispatch.
-
-    # Test
-    run_test_init__when_registering_for_event(SOME_CHANNEL)
-
-
-def run_test_init__when_registering_for_event(channel: str = ''):
+@pytest.mark.parametrize('channel', [None, '', SOME_CHANNEL])
+def test_constructor__when_registering_for_event(channel: str):
     # Objective:
     # Registration's handler is registered with event dispatch.
+    # When valid channel, registered with channel event dispatch, otherwise with default event dispatch.
 
     # Setup
     global event_dispatch
     callback_url = 'url'
     test_event = 'test_event'
+
+    channel = ''
 
     # Test
     reg = Registration(callback_url, test_event, channel)
@@ -85,23 +74,8 @@ def run_test_init__when_registering_for_event(channel: str = ''):
     assert reg.event == test_event
 
 
-def test_init__when_registering_for_all_events(mocker):
-    # Objective:
-    # Registration's handler is registered with default event dispatch.
-
-    # Test
-    run_test_init__when_registering_for_all_events(mocker, '')
-
-
-def test_init__when_registering_for_all_events__with_channel(mocker):
-    # Objective:
-    # Registration's handler is registered with channel event dispatch.
-
-    # Test
-    run_test_init__when_registering_for_all_events(mocker, SOME_CHANNEL)
-
-
-def run_test_init__when_registering_for_all_events(mocker, channel: str = ''):
+@pytest.mark.parametrize('channel', [None, '', SOME_CHANNEL])
+def test_constructor__when_registering_for_all_events(mocker, channel: str):
     # Objective:
     # Registration's handler is registered with event dispatch.
 
@@ -124,23 +98,8 @@ def run_test_init__when_registering_for_all_events(mocker, channel: str = ''):
     mock_call.assert_called()
 
 
-def test_cancel__when_registered_for_event():
-    # Objective:
-    # Registration's handler is unregistered with default event dispatch.
-
-    # Test
-    run_test_cancel__when_registered_for_event('')
-
-
-def test_cancel__when_registered_for_event__with_channel():
-    # Objective:
-    # Registration's handler is unregistered with channel event dispatch.
-
-    # Test
-    run_test_cancel__when_registered_for_event(SOME_CHANNEL)
-
-
-def run_test_cancel__when_registered_for_event(channel: str = ''):
+@pytest.mark.parametrize('channel', [None, '', SOME_CHANNEL])
+def test_cancel__when_registered_for_event(channel: str):
     # Objective:
     # Registration's handler is unregistered with event dispatch.
 
@@ -164,23 +123,8 @@ def run_test_cancel__when_registered_for_event(channel: str = ''):
     validate_expected_handler_count(0, channel_event_dispatch)
 
 
-def test_cancel__when_registered_for_all_events(mocker):
-    # Objective:
-    # Registration's handler is unregistered with default event dispatch.
-
-    # Test
-    run_test_cancel__when_registered_for_all_events(mocker, '')
-
-
-def test_cancel__when_registered_for_all_events__with_channel(mocker):
-    # Objective:
-    # Registration's handler is unregistered with channel event dispatch.
-
-    # Test
-    run_test_cancel__when_registered_for_all_events(mocker, SOME_CHANNEL)
-
-
-def run_test_cancel__when_registered_for_all_events(mocker, channel: str = ''):
+@pytest.mark.parametrize('channel', [None, '', SOME_CHANNEL])
+def test_cancel__when_registered_for_all_events(mocker, channel: str):
     # Objective:
     # Registration's handler is unregistered with event dispatch.
 
@@ -207,23 +151,8 @@ def run_test_cancel__when_registered_for_all_events(mocker, channel: str = ''):
     mock_call.assert_called()
 
 
-def test_on_event__when_reachable_client(mocker):
-    # Objective:
-    # Remote handler's API is called, with default event object.
-
-    # Test
-    run_test_on_event__when_reachable_client(mocker, '')
-
-
-def test_on_event__when_reachable_client__with_channel(mocker):
-    # Objective:
-    # Remote handler's API is called, with channel event object.
-
-    # Test
-    run_test_on_event__when_reachable_client(mocker, SOME_CHANNEL)
-
-
-def run_test_on_event__when_reachable_client(mocker, channel: str = ''):
+@pytest.mark.parametrize('channel', [None, '', SOME_CHANNEL])
+def test_on_event__when_reachable_client(mocker, channel: str):
     # Objective:
     # Remote handler's API is called, with event object.
 
@@ -250,25 +179,8 @@ def run_test_on_event__when_reachable_client(mocker, channel: str = ''):
     mock_call.assert_called_with(callback_url, json=remote_event.dict, timeout_sec=10.0)
 
 
-def test_on_event__when_unreachable_client():
-    # Objective:
-    # Unreachable client is unregistered with default event dispatch.
-    # Event sent about unreachable client.
-
-    # Test
-    run_test_on_event__when_unreachable_client('')
-
-
-def test_on_event__when_unreachable_client__with_channel():
-    # Objective:
-    # Unreachable client is unregistered with channel event dispatch.
-    # Event sent about unreachable client.
-
-    # Test
-    run_test_on_event__when_unreachable_client(SOME_CHANNEL)
-
-
-def run_test_on_event__when_unreachable_client(channel: str = ''):
+@pytest.mark.parametrize('channel', [None, '', SOME_CHANNEL])
+def test_on_event__when_unreachable_client(channel: str):
     # Objective:
     # Unreachable client is unregistered with event dispatch.
     # Event sent about unreachable client.

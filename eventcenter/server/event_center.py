@@ -46,7 +46,7 @@ class RegistrationData(Data):
 class RemoteEventData(Data):
     def __init__(self, channel: str, event: Event):
         super().__init__({
-            'channel': channel,
+            'channel': channel if channel else '',
             'event': event.dict
         })
 
@@ -76,7 +76,7 @@ class EventRegistrationManager:
 
     def __init__(self):
         self.__registrants = {}
-        self.__registrants_file_path = Properties.get('REGISTRANTS_FILE_PATH')
+        self.__registrants_file_path = Properties().get('REGISTRANTS_FILE_PATH')
 
         # Register to get notified if clients are unreachable, to take action.
         register_for_events(self.on_event, [RegistrationEvent.CALLBACK_FAILED_EVENT])
@@ -211,16 +211,16 @@ class RegistrationEvent(NamespacedEnum):
 
 class Registration:
     def __init__(self, callback_url: str, event: str = None, channel: str = ''):
-        self.__channel = channel
+        self.__channel = channel if channel else ''
         self.__callback_url = callback_url
         self.__event = event
-        self.__client_callback_timeout_sec = Properties.get('CLIENT_CALLBACK_TIMEOUT_SEC')
+        self.__client_callback_timeout_sec = Properties().get('CLIENT_CALLBACK_TIMEOUT_SEC')
 
         # if first registration for channel, add event dispatch for channel.
-        if channel not in EventDispatchManager().event_dispatchers:
-            EventDispatchManager().add_event_dispatch(channel)
+        if self.__channel not in EventDispatchManager().event_dispatchers:
+            EventDispatchManager().add_event_dispatch(self.__channel)
 
-        event_dispatch = EventDispatchManager().event_dispatchers.get(channel)
+        event_dispatch = EventDispatchManager().event_dispatchers.get(self.__channel)
         event_dispatch.register(self.on_event, self.__get_event_as_list())
 
     @property

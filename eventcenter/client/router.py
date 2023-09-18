@@ -9,11 +9,11 @@ from eventcenter.server.event_center import RemoteEventData
 
 def start_event_router():
     ec = EventRouter()
-    Properties.set('EVENT_ROUTER', ec)
+    Properties().set('EVENT_ROUTER', ec)
 
 
 def stop_event_router():
-    ec = Properties.get('EVENT_ROUTER')
+    ec = Properties().get('EVENT_ROUTER')
     ec.disconnect()
 
 
@@ -29,7 +29,7 @@ class EventRouter:
     def __init__(self):
         self.__event_service_adapter = EventCenterAdapter(self.on_external_event)
         try:
-            self.__channel = Properties.get('ROUTER_CHANNEL')
+            self.__channel = Properties().get('ROUTER_CHANNEL')
         except PropertyNotSetError:
             self.__channel = ''
 

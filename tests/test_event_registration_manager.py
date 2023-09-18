@@ -23,8 +23,8 @@ def setup_module():
     event_dispatch = EventDispatchManager().default_dispatch
     event_dispatch.toggle_event_logging(True)
 
-    Properties.set('REGISTRANTS_FILE_PATH', 'registrants.json', is_skip_if_exists=True)
-    Properties.set('CLIENT_CALLBACK_TIMEOUT_SEC', 10.0, is_skip_if_exists=True)
+    Properties().set('REGISTRANTS_FILE_PATH', 'registrants.json', is_skip_if_exists=True)
+    Properties().set('CLIENT_CALLBACK_TIMEOUT_SEC', 10.0, is_skip_if_exists=True)
 
 
 def setup_function():
@@ -52,7 +52,7 @@ def test_init__no_registrants_file():
     # Manager has an empty list of registrants
 
     # Setup
-    filepath = Properties.get('REGISTRANTS_FILE_PATH')
+    filepath = Properties().get('REGISTRANTS_FILE_PATH')
     os.remove(filepath)
     validate_file_not_exists(filepath)
     expected_content = '{"registrants": {}}'
@@ -73,7 +73,7 @@ def test_init__registrants_file_is_empty():
     # Manager has an empty list of registrants
 
     # Setup
-    filepath = Properties.get('REGISTRANTS_FILE_PATH')
+    filepath = Properties().get('REGISTRANTS_FILE_PATH')
     os.remove(filepath)
     validate_file_not_exists(filepath)
     expected_content = '{"registrants": {}}'
@@ -95,7 +95,7 @@ def test_init__when_no_prior_registrants():
     # Manager has an empty dictionary of registrants
 
     # Setup
-    filepath = Properties.get('REGISTRANTS_FILE_PATH')
+    filepath = Properties().get('REGISTRANTS_FILE_PATH')
     os.remove(filepath)
     validate_file_not_exists(filepath)
     expected_registrants = '{"registrants": {}}'
@@ -157,7 +157,7 @@ def test_register__when_not_registered__registering_for_events():
 
     # Setup
     global event_registration_manager
-    filepath = Properties.get('REGISTRANTS_FILE_PATH')
+    filepath = Properties().get('REGISTRANTS_FILE_PATH')
     channel = ''
     test_event1 = 'test_event1'
     test_event2 = 'test_event2'
@@ -190,7 +190,7 @@ def test_register__when_not_registered__registering_for_all_events():
 
     # Setup
     global event_registration_manager
-    filepath = Properties.get('REGISTRANTS_FILE_PATH')
+    filepath = Properties().get('REGISTRANTS_FILE_PATH')
     channel = ''
     data = RegistrationData(callback_url, [], channel)
 
@@ -336,7 +336,7 @@ def test_unregister_all__when_not_registered__no_other_registrants():
 
     # Setup
     global event_registration_manager
-    filepath = Properties.get('REGISTRANTS_FILE_PATH')
+    filepath = Properties().get('REGISTRANTS_FILE_PATH')
     validate_expected_registrant_count(0)
 
     expected_registrants = {
@@ -358,7 +358,7 @@ def test_unregister_all__when_not_registered__have_other_registrants():
 
     # Setup
     global event_registration_manager
-    filepath = Properties.get('REGISTRANTS_FILE_PATH')
+    filepath = Properties().get('REGISTRANTS_FILE_PATH')
     callback_url1 = 'some_other_url'
 
     channel = ''
@@ -390,7 +390,7 @@ def test_unregister_all__when_registered_for_event_and_all_events__on_same_chann
 
     # Setup
     global event_registration_manager
-    filepath = Properties.get('REGISTRANTS_FILE_PATH')
+    filepath = Properties().get('REGISTRANTS_FILE_PATH')
 
     channel = ''
     test_event = 'test_event'
@@ -419,7 +419,7 @@ def test_unregister_all__when_registered_for_event_and_all_events__on_same_chann
 
     # Setup
     global event_registration_manager
-    filepath = Properties.get('REGISTRANTS_FILE_PATH')
+    filepath = Properties().get('REGISTRANTS_FILE_PATH')
 
     channel = ''
     test_event = 'test_event'
@@ -457,7 +457,7 @@ def test_unregister_all__when_registered_for_events__on_multiple_channels__no_ot
 
     # Setup
     global event_registration_manager
-    filepath = Properties.get('REGISTRANTS_FILE_PATH')
+    filepath = Properties().get('REGISTRANTS_FILE_PATH')
 
     channel = 'ch-1'
     channel2 = 'ch-2'
@@ -499,23 +499,12 @@ def create_registrant_with_data(data: RegistrationData, url: str, expected_regis
     validate_have_registrant(url)
 
 
-def test_post():
+@pytest.mark.parametrize('channel', ['', SOME_CHANNEL])
+def test_post(channel: str):
     # Objective:
-    # The default event dispatch gets the event posted on it.
+    # If channel is specified, that channel's event dispatch gets the event posted on it.
+    # If channel is not specified, the event is posted on the default event dispatch.
 
-    # Test
-    run_test_post('')
-
-
-def test_post__when_have_channel():
-    # Objective:
-    # The specific channel event dispatch gets the event posted on it.
-
-    # Test
-    run_test_post(SOME_CHANNEL)
-
-
-def run_test_post(channel: str = ''):
     # Setup
     global event_registration_manager
     event = Event('test_event')

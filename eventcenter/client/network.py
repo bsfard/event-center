@@ -15,7 +15,7 @@ class FlaskAppRunner(threading.Thread):
         super().__init__()
 
         try:
-            self.is_allow_cors = Properties.get('ALLOW_CORS') == True
+            self.is_allow_cors = Properties().get('ALLOW_CORS') == True
         except PropertyNotSetError:
             self.is_allow_cors = False
 
@@ -35,7 +35,7 @@ class FlaskAppRunner(threading.Thread):
     @staticmethod
     def is_flask_debug() -> bool:
         try:
-            p = Properties.get('FLASK_DEBUG')
+            p = Properties().get('FLASK_DEBUG')
             return p == '1' or p.upper() == 'TRUE' or p.upper() == 'YES'
         except PropertyNotSetError:
             return False

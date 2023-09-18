@@ -130,3 +130,8 @@ dmypy.json
 
 # pycharm
 .idea/
+
+# event center files that are temporary
+/eventcenter/server/registrants.json
+/tests/registrants.json
+/registrants.json

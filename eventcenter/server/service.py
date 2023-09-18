@@ -17,7 +17,6 @@ RESPONSE_ERROR = {
 
 # -------------------------------------------------------------------------------------------------
 
-
 class ECEvent(NamespacedEnum):
     STARTED = 'started'
     STOPPED = 'stopped'
@@ -28,13 +27,12 @@ class ECEvent(NamespacedEnum):
 
 # -------------------------------------------------------------------------------------------------
 
-
 class EventCenterService(FlaskAppRunner):
     def __init__(self):
         self.__event_registration_manager = EventRegistrationManager()
 
         self.app = Flask('EventCenter')
-        port = Properties.get('EVENT_CENTER_PORT')
+        port = Properties().get('EVENT_CENTER_PORT')
         super().__init__('0.0.0.0', port, self.app)
 
         if not self.is_flask_debug():
@@ -73,6 +71,10 @@ class EventCenterService(FlaskAppRunner):
             remote_event_data = RemoteEventData.from_dict(request.json)
             self.__event_registration_manager.post(remote_event_data)
             return self.make_response(RESPONSE_OK)
+
+        @self.app.route('/track_events', methods=['POST'])
+        def watch():
+            request.json
 
         # Admin APIs
         @self.app.route('/registrants', methods=['GET'])

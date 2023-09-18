@@ -24,21 +24,21 @@ def get_program_args(default_callback_host: str = 'http://localhost',
     # Set up properties.
     ec_host = parsed_args.get('event_center_host') or default_event_center_host
     ec_port = parsed_args.get('event_center_port') or default_event_center_port
-    Properties.set('EVENT_CENTER_PORT', ec_port)
-    Properties.set('EVENT_CENTER_URL', f'{ec_host}:{ec_port}')
+    Properties().set('EVENT_CENTER_PORT', ec_port)
+    Properties().set('EVENT_CENTER_URL', f'{ec_host}:{ec_port}')
 
-    Properties.set('EVENT_CENTER_CALLBACK_HOST', parsed_args.get('callback_host') or default_callback_host)
+    Properties().set('EVENT_CENTER_CALLBACK_HOST', parsed_args.get('callback_host') or default_callback_host)
 
     port = parsed_args.get('callback_port') or default_callback_port
     if type(port) == str:
         port = int(port)
-    Properties.set('EVENT_CENTER_CALLBACK_PORT', port)
+    Properties().set('EVENT_CENTER_CALLBACK_PORT', port)
 
     registrants_filepath = parsed_args.get('registrants_file_path') or default_registrants_filepath
-    Properties.set('REGISTRANTS_FILE_PATH', registrants_filepath)
+    Properties().set('REGISTRANTS_FILE_PATH', registrants_filepath)
 
     client_callback_timeout_sec = parsed_args.get('client_callback_timeout_sec') or default_client_callback_timeout_sec
-    Properties.set('CLIENT_CALLBACK_TIMEOUT_SEC', client_callback_timeout_sec)
+    Properties().set('CLIENT_CALLBACK_TIMEOUT_SEC', client_callback_timeout_sec)
 
 
 def log_event(for_class: Any, event: Event):

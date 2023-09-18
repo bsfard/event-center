@@ -9,4 +9,4 @@ start_event_router()
 
 Worker2()
 
-print(f"Running 'Worker 2' on port: {Properties.get('EVENT_CENTER_CALLBACK_PORT')}")
+print(f"Running 'Worker 2' on port: {Properties().get('EVENT_CENTER_CALLBACK_PORT')}")

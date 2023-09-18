@@ -1,3 +1,4 @@
+import pytest
 from eventdispatch import Event, Properties
 
 from eventcenter.client.event_center_adapter import EventCenterAdapter
@@ -42,8 +43,8 @@ def test_init():
 
     # Setup
     global adapter
-    host = Properties.get('EVENT_CENTER_CALLBACK_HOST')
-    port = str(Properties.get('EVENT_CENTER_CALLBACK_PORT'))
+    host = Properties().get('EVENT_CENTER_CALLBACK_HOST')
+    port = str(Properties().get('EVENT_CENTER_CALLBACK_PORT'))
 
     # Test
     # (none...taken care of by setup function)
@@ -55,39 +56,31 @@ def test_init():
     assert port in adapter.callback_url
 
 
-def test_register__when_have_events(mocker):
-    # Objective:
-    # /register API is called for specified events.
+test_params__register = [
+    # Specified events, no channel.
+    (
+        ['test_event1', 'test_event2'], ''
+    ),
 
-    # Test
-    run_test__register(mocker, ['test_event1', 'test_event2'], '')
+    # Specified events, with channel.
+    (
+        ['test_event1', 'test_event2'], SOME_CHANNEL
+    ),
 
+    # All events, no channel.
+    (
+        [], ''
+    ),
 
-def test_register__when_have_events__with_channel(mocker):
-    # Objective:
-    # /register API is called for specified events, with channel.
-
-    # Test
-    run_test__register(mocker, ['test_event1', 'test_event2'], SOME_CHANNEL)
-
-
-def test_register__when_all_events(mocker):
-    # Objective:
-    # /register API is called for all events.
-
-    # Test
-    run_test__register(mocker, [], '')
-
-
-def test_register__when_all_events__with_channels(mocker):
-    # Objective:
-    # /register API is called for all events, with channel.
-
-    # Test
-    run_test__register(mocker, [], SOME_CHANNEL)
+    # All events, with channel.
+    (
+        [], SOME_CHANNEL
+    ),
+]
 
 
-def run_test__register(mocker, events: [str], channel: str = ''):
+@pytest.mark.parametrize('events, channel', test_params__register)
+def test__register(mocker, events: [str], channel: str):
     # Setup
     global adapter
     mock_call = mocker.patch('eventcenter.client.event_center_adapter.APICaller.make_post_call',
@@ -102,39 +95,8 @@ def run_test__register(mocker, events: [str], channel: str = ''):
     mock_call.assert_called_with(url, json=body.dict, is_suppress_connection_error=True)
 
 
-def test_unregister__when_have_events(mocker):
-    # Objective:
-    # /unregister API is called for specified events.
-
-    # Test
-    run_test__unregister(mocker, ['test_event1', 'test_event2'], '')
-
-
-def test_unregister__when_have_events__with_channel(mocker):
-    # Objective:
-    # /unregister API is called for specified events, with channel.
-
-    # Test
-    run_test__unregister(mocker, ['test_event1', 'test_event2'], SOME_CHANNEL)
-
-
-def test_unregister__when_all_events(mocker):
-    # Objective:
-    # /unregister API is called for all events.
-
-    # Test
-    run_test__unregister(mocker, [], '')
-
-
-def test_unregister__when_all_events__with_events(mocker):
-    # Objective:
-    # /unregister API is called for all events, with channel.
-
-    # Test
-    run_test__unregister(mocker, [], SOME_CHANNEL)
-
-
-def run_test__unregister(mocker, events: [str], channel: str = ''):
+@pytest.mark.parametrize('events, channel', test_params__register)
+def test__unregister(mocker, events: [str], channel: str):
     # Setup
     global adapter
     mock_call = mocker.patch('eventcenter.client.event_center_adapter.APICaller.make_post_call',
@@ -149,23 +111,8 @@ def run_test__unregister(mocker, events: [str], channel: str = ''):
     mock_call.assert_called_with(url, json=body.dict, is_suppress_connection_error=True)
 
 
-def test_post_event(mocker):
-    # Objective:
-    # /post_event API is called for specified event.
-
-    # Test
-    run_test_post_event(mocker, '')
-
-
-def test_post_event__with_channel(mocker):
-    # Objective:
-    # /post_event API is called for specified event, with channel.
-
-    # Test
-    run_test_post_event(mocker, SOME_CHANNEL)
-
-
-def run_test_post_event(mocker, channel: str = ''):
+@pytest.mark.parametrize('channel', ['', SOME_CHANNEL])
+def test_post_event(mocker, channel: str):
     # Setup
     global adapter
     event = Event('test_event', {'name': 'Alice'})

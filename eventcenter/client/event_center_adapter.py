@@ -13,9 +13,9 @@ CALLBACK_ENDPOINT = '/on_event'
 class EventCenterAdapter(FlaskAppRunner):
     def __init__(self, event_handler: Callable):
         self.event_handler = event_handler
-        self.event_center_url = Properties.get('EVENT_CENTER_URL')
-        host = Properties.get('EVENT_CENTER_CALLBACK_HOST')
-        port = Properties.get('EVENT_CENTER_CALLBACK_PORT')
+        self.event_center_url = Properties().get('EVENT_CENTER_URL')
+        host = Properties().get('EVENT_CENTER_CALLBACK_HOST')
+        port = Properties().get('EVENT_CENTER_CALLBACK_PORT')
 
         self.url = f'{host}:{port}'
         self.callback_url = f'{self.url}{CALLBACK_ENDPOINT}'
