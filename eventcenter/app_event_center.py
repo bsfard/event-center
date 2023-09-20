@@ -7,7 +7,7 @@ from flask import Flask
 
 from eventcenter import EventCenterService
 
-DEFAULT_PORT = 5000
+DEFAULT_PORT = 6000
 DEFAULT_REGISTRANTS_FILE_PATH = 'server/registrants.json'
 DEFAULT_CALLBACK_TIMEOUT_SEC = 10
 

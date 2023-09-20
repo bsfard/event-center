@@ -72,9 +72,9 @@ class EventCenterService(FlaskAppRunner):
             self.__event_registration_manager.post(remote_event_data)
             return self.make_response(RESPONSE_OK)
 
-        @self.app.route('/track_events', methods=['POST'])
-        def watch():
-            request.json
+        # @self.app.route('/track_events', methods=['POST'])
+        # def watch():
+        #     request.json
 
         # Admin APIs
         @self.app.route('/registrants', methods=['GET'])

@@ -1,12 +1,23 @@
 from eventdispatch import Properties
 
-from demo.remote_workers.util import get_program_args
 from demo.workers import Worker1
 from eventcenter import start_event_router
 
-get_program_args(default_callback_port=7001)
+worker_id = 1
+worker = Worker1
+port = 7001
+
+# ----- COMMON SECTION ----------------------------------------------------------------------------
+# Property for reaching remote Event Center.
+Properties().set('EVENT_CENTER_URL', 'http://localhost:6000')
+
+# Properties for setting your host name and port, for remote Event Center to send you events.
+Properties().set('EVENT_CENTER_CALLBACK_HOST', 'http://localhost')
+Properties().set('EVENT_CENTER_CALLBACK_PORT', port)
+
 start_event_router()
 
-Worker1()
+worker()
 
-print(f"Running 'Worker 1' on port: {Properties().get('EVENT_CENTER_CALLBACK_PORT')}")
+print(f"Running 'Worker {worker_id}' on port: {Properties().get('EVENT_CENTER_CALLBACK_PORT')}")
+# -------------------------------------------------------------------------------------------------

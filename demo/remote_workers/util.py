@@ -9,7 +9,7 @@ from eventdispatch import Event, Properties
 def get_program_args(default_callback_host: str = 'http://localhost',
                      default_callback_port: int = 0,
                      default_event_center_host: str = 'http://localhost',
-                     default_event_center_port: int = 5000,
+                     default_event_center_port: int = 6000,
                      default_registrants_filepath: str = 'registrants.json',
                      default_client_callback_timeout_sec: float = 10.0):
     parser = argparse.ArgumentParser()
