@@ -21,7 +21,7 @@ app: Flask
 def main():
     global app
 
-    logging.basicConfig(level=logging.INFO)
+    logging.basicConfig(level=logging.DEBUG)
 
     get_program_args()
     set_properties()
