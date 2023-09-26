@@ -13,11 +13,13 @@ HEADERS = {'Content-Type': 'application/json'}
 class FlaskAppRunner(threading.Thread):
     def __init__(self, host: str, port: int, app: Flask):
         super().__init__()
+        self.is_allow_cors = False
 
         try:
-            self.is_allow_cors = Properties().get('ALLOW_CORS') == True
+            if Properties().has('ALLOW_CORS'):
+                self.is_allow_cors = Properties().get('ALLOW_CORS') == True
         except PropertyNotSetError:
-            self.is_allow_cors = False
+            pass
 
         # Silence logging from flask and requests libraries.
         logging.getLogger('werkzeug').setLevel(logging.WARNING)

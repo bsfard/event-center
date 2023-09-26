@@ -24,6 +24,7 @@ def main():
     Properties().set('EVENT_CENTER_PORT', port)
     Properties().set('CLIENT_CALLBACK_TIMEOUT_SEC', 20)
     Properties().set('FLASK_DEBUG', '1')
+    Properties().set('PRETTY_PRINT', True)
 
     ecs = EventCenterService()
     app = ecs.app

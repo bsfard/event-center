@@ -1,9 +1,11 @@
 import json
 import logging
+import threading
 from typing import Dict, Any
 
 from eventdispatch import Data, Event, Properties, NamespacedEnum, register_for_events, \
     EventDispatchManager
+from requests.exceptions import InvalidSchema
 
 from eventcenter import APICaller, ApiConnectionError
 
@@ -76,6 +78,7 @@ class EventRegistrationManager:
 
     def __init__(self):
         self.__registrants = {}
+        self.__lock = threading.Lock()
         self.__registrants_file_path = Properties().get('REGISTRANTS_FILE_PATH')
 
         # Register to get notified if clients are unreachable, to take action.
@@ -88,56 +91,59 @@ class EventRegistrationManager:
         return self.__registrants
 
     def register(self, registration_data: RegistrationData):
-        try:
-            registrant = self.__registrants[registration_data.callback_url]
-        except KeyError:
-            # New registrant, create and store.
-            registrant = Registrant(registration_data.callback_url)
-            self.__registrants[registration_data.callback_url] = registrant
+        with self.__lock:
+            try:
+                registrant = self.__registrants[registration_data.callback_url]
+            except KeyError:
+                # New registrant, create and store.
+                registrant = Registrant(registration_data.callback_url)
+                self.__registrants[registration_data.callback_url] = registrant
 
-        is_got_registered = False
-        if registration_data.events:
-            for event in registration_data.events:
-                if registrant.register(event, channel=registration_data.channel):
+            is_got_registered = False
+            if registration_data.events:
+                for event in registration_data.events:
+                    if registrant.register(event, channel=registration_data.channel):
+                        is_got_registered = True
+            else:
+                if registrant.register(channel=registration_data.channel):
                     is_got_registered = True
-        else:
-            if registrant.register(channel=registration_data.channel):
-                is_got_registered = True
 
-        if is_got_registered:
+            # if is_got_registered:
             self.__persist_registrants()
 
     def unregister(self, registration_data: RegistrationData):
-        try:
-            registrant = self.__registrants[registration_data.callback_url]
+        with self.__lock:
+            try:
+                registrant = self.__registrants[registration_data.callback_url]
 
-            is_got_unregistered = False
-            if registration_data.events:
-                for event in registration_data.events:
-                    if registrant.unregister(event, channel=registration_data.channel):
+                is_got_unregistered = False
+                if registration_data.events:
+                    for event in registration_data.events:
+                        if registrant.unregister(event, channel=registration_data.channel):
+                            is_got_unregistered = True
+                else:
+                    if registrant.unregister(channel=registration_data.channel):
                         is_got_unregistered = True
-            else:
-                if registrant.unregister(channel=registration_data.channel):
-                    is_got_unregistered = True
-            if len(registrant.registrations) == 0:
-                del self.__registrants[registration_data.callback_url]
+                if len(registrant.registrations) == 0:
+                    del self.__registrants[registration_data.callback_url]
 
-            if is_got_unregistered:
+                # if is_got_unregistered:
                 self.__persist_registrants()
 
-        except KeyError:
-            # No registrant, so nothing to do.
-            return
+            except KeyError:
+                # No registrant, so nothing to do.
+                return
 
     def unregister_all(self, callback_url: str):
-        try:
-            registrant = self.__registrants[callback_url]
-            if registrant.unregister_all():
-                del self.__registrants[callback_url]
-                self.__persist_registrants()
-        except KeyError:
-            # No registrant, so nothing to do.
-            return
+        with self.__lock:
+            try:
+                registrant = self.__registrants[callback_url]
+                if registrant.unregister_all():
+                    del self.__registrants[callback_url]
+                    self.__persist_registrants()
+            except KeyError:
+                # No registrant, so nothing to do.
+                return
 
     @staticmethod
     def post(remote_event_data: RemoteEventData):
@@ -186,6 +192,11 @@ class EventRegistrationManager:
             for channel, registrations in registrant.registrations.items():
                 events = [] if len(registrations) == 0 else [event for event in registrations]
                 registrants[callback_url][channel] = events
+
+        if Properties().get('PRETTY_PRINT'):
+            print(json.dumps(registrants, indent=2))
+        else:
+            print(registrants)
         return {self.__REGISTRANTS_KEY: registrants}
 
     def __handle_unreachable_client(self, event: Event):
@@ -242,7 +253,7 @@ class Registration:
         try:
             APICaller.make_post_call(self.__callback_url, json=remote_event.dict,
                                      timeout_sec=self.__client_callback_timeout_sec)
-        except ApiConnectionError:
+        except (ApiConnectionError, InvalidSchema) as e:
             self.__handle_unreachable_client()
 
     def __get_event_as_list(self) -> [str]:
