@@ -28,7 +28,7 @@ class FlaskAppRunner(threading.Thread):
         self.logger = logging.getLogger(app.name)
         self.app = app
 
-        if not self.is_flask_debug():
+        if self.is_flask_debug():
             self.server = make_server(host, port, app)
 
         self.ctx = app.app_context()

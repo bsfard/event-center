@@ -8,7 +8,6 @@ prep_client_app_settings()
 
 start_event_router()
 
-# time.sleep(3)
 Worker1()
 
 print(f"Running 'Worker 1' on port: {Properties().get('EVENT_CENTER_CALLBACK_PORT')}")

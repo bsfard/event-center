@@ -2,6 +2,7 @@ import logging
 
 from eventdispatch import Event, EventDispatchEvent, register_for_events, Properties, PropertyNotSetError, post_event
 from flask import Flask
+from wrapt import synchronized
 
 from eventcenter.client.event_center_adapter import EventCenterAdapter
 from eventcenter.server.event_center import RemoteEventData
@@ -42,6 +43,7 @@ class EventRouter:
     def server(self) -> Flask:
         return self.__event_service_adapter.app
 
+    @synchronized
     def on_internal_event(self, event: Event):
         self.__log_message_got_internal_event(event)
 
@@ -53,7 +55,8 @@ class EventRouter:
         # Check if registration event.
         if event.name == EventDispatchEvent.HANDLER_REGISTERED.namespaced_value:
             # Check if it's from Event Router (if so, ignore it).
-            if 'EventRouter.on_internal_event' in event.payload['handler']:
+            if 'EventRouter.on_internal_event' in event.payload['handler'] or 'BoundFunctionWrapper' in event.payload[
+                'handler']:
                 self.__log_message_not_propagating_event__originated_from_router(event)
                 return
 
@@ -91,7 +94,8 @@ class EventRouter:
 
     @staticmethod
     def __log_message_got_internal_event(event: Event):
-        message = f"Got internal event '{event.name}'"
+        message = f"Got internal event '{event.name}'\n"
+        message += f"\n{event.payload}"
         EventRouter.__logger.debug(message)
 
     @staticmethod
@@ -106,7 +110,7 @@ class EventRouter:
 
     @staticmethod
     def __log_message_not_propagating_event__originated_from_router(event: Event):
-        message = f"Not propagating event '{event.name}'...originated from from router"
+        message = f"Not propagating event '{event.name}'...originated from router"
         EventRouter.__logger.debug(message)
 
     @staticmethod

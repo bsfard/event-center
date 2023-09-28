@@ -35,7 +35,7 @@ class EventCenterService(FlaskAppRunner):
         port = Properties().get('EVENT_CENTER_PORT')
         super().__init__('0.0.0.0', port, self.app)
 
-        if not self.is_flask_debug():
+        if self.is_flask_debug():
             self.start()
 
         post_event(ECEvent.STARTED, {})

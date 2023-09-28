@@ -4,7 +4,7 @@ import threading
 from typing import Dict, Any
 
 from eventdispatch import Data, Event, Properties, NamespacedEnum, register_for_events, \
-    EventDispatchManager
+    EventDispatchManager, PropertyNotSetError
 from requests.exceptions import InvalidSchema
 
 from eventcenter import APICaller, ApiConnectionError
@@ -90,7 +90,7 @@ class EventRegistrationManager:
     def registrants(self) -> dict:
         return self.__registrants
 
-    def register(self, registration_data: RegistrationData):
+    def register(self, registration_data: RegistrationData, is_persist: bool = True):
         with self.__lock:
             try:
                 registrant = self.__registrants[registration_data.callback_url]
@@ -108,8 +108,11 @@ class EventRegistrationManager:
                 if registrant.register(channel=registration_data.channel):
                     is_got_registered = True
 
-            # if is_got_registered:
-            self.__persist_registrants()
+            if is_got_registered:
+                registrant.log_message_registrations(registrant.callback_url)
+
+                if is_persist:
+                    self.__persist_registrants()
 
     def unregister(self, registration_data: RegistrationData):
         with self.__lock:
@@ -127,8 +130,9 @@ class EventRegistrationManager:
                 if len(registrant.registrations) == 0:
                     del self.__registrants[registration_data.callback_url]
 
-                # if is_got_unregistered:
-                self.__persist_registrants()
+                if is_got_unregistered:
+                    registrant.log_message_registrations(registrant.callback_url)
+                    self.__persist_registrants()
 
             except KeyError:
                 # No registrant, so nothing to do.
@@ -159,8 +163,9 @@ class EventRegistrationManager:
             return None
 
     def clear_registrants(self):
-        self.__registrants: Dict[str, Registrant] = {}
-        self.__persist_registrants()
+        with self.__lock:
+            self.__registrants: Dict[str, Registrant] = {}
+            self.__persist_registrants()
 
     def on_event(self, event: Event):
         if event.name == RegistrationEvent.CALLBACK_FAILED_EVENT.namespaced_value:
@@ -179,7 +184,7 @@ class EventRegistrationManager:
     def __reprocess_registrations(self, registrants_data: Dict[str, Any]) -> [registrants]:
         for callback_url, channels in registrants_data.items():
             for channel, events in channels.items():
-                self.register(RegistrationData(callback_url, events, channel))
+                self.register(RegistrationData(callback_url, events, channel), is_persist=False)
 
     def __persist_registrants(self):
         with open(self.__registrants_file_path, 'w') as file:
@@ -193,10 +198,13 @@ class EventRegistrationManager:
                 events = [] if len(registrations) == 0 else [event for event in registrations]
                 registrants[callback_url][channel] = events
 
+        message = '\nCurrent Registrations:\n'
         if Properties().get('PRETTY_PRINT'):
-            print(json.dumps(registrants, indent=2))
+            message += json.dumps(registrants, indent=2) + '\n'
         else:
-            print(registrants)
+            message += f"{registrants}'\n'"
+        logging.getLogger().debug(message)
+
         return {self.__REGISTRANTS_KEY: registrants}
 
     def __handle_unreachable_client(self, event: Event):
@@ -253,7 +261,7 @@ class Registration:
         try:
             APICaller.make_post_call(self.__callback_url, json=remote_event.dict,
                                      timeout_sec=self.__client_callback_timeout_sec)
-        except (ApiConnectionError, InvalidSchema) as e:
+        except (ApiConnectionError, InvalidSchema):
             self.__handle_unreachable_client()
 
     def __get_event_as_list(self) -> [str]:
@@ -291,6 +299,11 @@ class Registrant:
         self.__callback_url = callback_url
         self.__registrations: Dict[str, Dict[str, Registration]] = {}
 
+        try:
+            self.__pretty_print = Properties().get('PRETTY_PRINT')
+        except PropertyNotSetError:
+            self.__pretty_print = False
+
     @property
     def registrations(self) -> Dict[str, Dict[str, Registration]]:
         return self.__registrations
@@ -313,7 +326,7 @@ class Registrant:
 
         registrations[key] = Registration(self.__callback_url, event, channel)
 
-        self.__log_message_registrations()
+        # self.__log_message_registrations()
         return True
 
     def unregister(self, event: str = None, channel: str = '') -> bool:
@@ -337,7 +350,7 @@ class Registrant:
         if len(self.__registrations[channel]) == 0:
             del self.__registrations[channel]
 
-        self.__log_message_registrations()
+        # self.log_message_registrations()
         return True
 
     def unregister_all(self) -> bool:
@@ -349,14 +362,22 @@ class Registrant:
 
         self.__registrations = {}
 
-        self.__log_message_registrations()
+        self.log_message_registrations(self.__callback_url)
         return is_unregistered
 
-    def __log_message_registrations(self):
-        message = 'Registrations:\n'
+    def log_message_registrations(self, registrant_name: str):
+        message = f'Registrations for: {registrant_name}\n'
+        regs = []
         for channel, registrations in self.__registrations.items():
             for event, registration in registrations.items():
-                message += f'{registration.dict()}'
+                if self.__pretty_print:
+                    regs.append(registration.dict())
+                else:
+                    message += f'{registration.dict()}'
+
+        if self.__pretty_print:
+            message += json.dumps(regs, indent=2)
+
         logging.getLogger().debug(message)
 
     def dict(self) -> Dict[str, Any]:

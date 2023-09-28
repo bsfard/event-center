@@ -1,6 +1,5 @@
 import json
 import logging
-import time
 
 from eventdispatch import Event, Properties, register_for_events
 from flask import Flask

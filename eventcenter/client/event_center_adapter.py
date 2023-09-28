@@ -24,7 +24,7 @@ class EventCenterAdapter(FlaskAppRunner):
 
         super().__init__('0.0.0.0', port, self.app)
 
-        if not self.is_flask_debug():
+        if self.is_flask_debug():
             self.start()
 
         @self.app.route(CALLBACK_ENDPOINT, methods=['POST'])

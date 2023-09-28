@@ -49,4 +49,6 @@ def set_properties(args: Dict[str, Any]):
     Properties().set('EVENT_CENTER_CALLBACK_HOST', args.get('callback_host'))
     Properties().set('EVENT_CENTER_CALLBACK_PORT', args.get('callback_port'))
 
+    Properties().set('FLASK_DEBUG', '1')
+
     Properties().set('CLIENT_LOGGING_PRETTY_PRINT', args.get('pretty_print'))
