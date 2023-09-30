@@ -14,6 +14,9 @@ port = int(os.environ.get('EC_PORT', 6000))
 # Check desired log level from environment ('1' == DEBUG, otherwise INFO).
 log_level = os.environ.get('EC_LOG_DEBUG', '1')
 
+# Check flask run level from environment ('1' == DEBUG, otherwise INFO).
+flask_debug = os.environ.get('FLASK_DEBUG', '0')
+
 logging.basicConfig(level=logging.DEBUG if log_level == '1' else logging.INFO)
 
 
@@ -23,7 +26,7 @@ def main():
     Properties().set('REGISTRANTS_FILE_PATH', 'server/registrants.json')
     Properties().set('EVENT_CENTER_PORT', port)
     Properties().set('CLIENT_CALLBACK_TIMEOUT_SEC', 20)
-    Properties().set('FLASK_DEBUG', '0')
+    Properties().set('FLASK_DEBUG', flask_debug)
     Properties().set('PRETTY_PRINT', True)
 
     ecs = EventCenterService()

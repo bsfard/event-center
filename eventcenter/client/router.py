@@ -29,10 +29,12 @@ class EventRouter:
 
     def __init__(self):
         self.__event_service_adapter = EventCenterAdapter(self.on_external_event)
+        self.__channel = ''
         try:
-            self.__channel = Properties().get('ROUTER_CHANNEL')
+            if Properties().has('ROUTER_CHANNEL'):
+                self.__channel = Properties().get('ROUTER_CHANNEL')
         except PropertyNotSetError:
-            self.__channel = ''
+            pass
 
         self.__event_service_adapter.unregister_all()
 
@@ -72,19 +74,24 @@ class EventRouter:
             self.__event_service_adapter.unregister(events, self.__channel)
         else:
             # All other (non-registration) events that should be propagated to the outside.
+            event.payload['metadata'] = {
+                'original_event_id': event.id,
+                'original_event_time': event.time
+            }
+
             self.__log_message_propagating_event(event)
 
-            event.payload['original_event_id'] = event.id
-            event.payload['original_event_time'] = event.time
             self.__event_service_adapter.post_event(event, self.__channel)
 
     def on_external_event(self, remote_event: RemoteEventData):
-        EventRouter.__log_message_got_external_event(remote_event.event)
-
         # Add external (original) event info to payload.
-        remote_event.event.payload[EventRouter.__EXTERNAL_EVENT_ID] = remote_event.event.id
-        remote_event.event.payload[EventRouter.__EXTERNAL_EVENT_TIME] = remote_event.event.time
-        remote_event.event.payload['channel'] = remote_event.channel
+        remote_event.event.payload['metadata'] = {
+            EventRouter.__EXTERNAL_EVENT_ID: remote_event.event.id,
+            EventRouter.__EXTERNAL_EVENT_TIME: remote_event.event.time,
+            'channel': remote_event.channel
+        }
+
+        EventRouter.__log_message_got_external_event(remote_event.event)
 
         # Propagate external event to local_clients event center
         post_event(remote_event.event.name, remote_event.event.payload, self.on_internal_event)
@@ -94,7 +101,7 @@ class EventRouter:
 
     @staticmethod
     def __log_message_got_internal_event(event: Event):
-        message = f"Got internal event '{event.name}'\n"
+        message = f"Got internal event '{event.name}'"
         message += f"\n{event.payload}"
         EventRouter.__logger.debug(message)
 

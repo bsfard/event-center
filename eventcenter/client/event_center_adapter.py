@@ -48,7 +48,8 @@ class EventCenterAdapter(FlaskAppRunner):
 
     def post_event(self, event: Event, channel: str = ''):
         url = self.event_center_url + '/post_event'
-        event.payload['sender_url'] = f'{self.url}'
+
+        event.payload['metadata'] = {'sender_url': f'{self.url}'}
         data = RemoteEventData(channel, event)
         APICaller.make_post_call(url, json=data.dict, is_suppress_connection_error=True)
 
