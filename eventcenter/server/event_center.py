@@ -44,7 +44,6 @@ class RegistrationData(Data):
 
 # -------------------------------------------------------------------------------------------------
 
-
 class RemoteEventData(Data):
     def __init__(self, channel: str, event: Event):
         super().__init__({
@@ -72,6 +71,50 @@ class RemoteEventData(Data):
 
 # -------------------------------------------------------------------------------------------------
 
+class EventMappingData(Data):
+    def __init__(self, channel: str, events_to_map: [Event], event_to_post: Event, reset_if_exists: bool = False):
+        super().__init__({
+            'channel': channel if channel else '',
+            'events_to_map': [event.dict for event in events_to_map],
+            'event_to_post': event_to_post.dict,
+            'reset_if_exists': reset_if_exists
+        })
+
+        self.__channel = channel
+        self.__events_to_map = events_to_map
+        self.__event_to_post = event_to_post
+        self.__reset_if_exists = reset_if_exists
+
+    @property
+    def channel(self) -> str:
+        return self.__channel
+
+    @property
+    def events_to_map(self) -> [Event]:
+        return self.__events_to_map
+
+    @property
+    def event_to_post(self) -> Event:
+        return self.__event_to_post
+
+    @property
+    def reset_if_exists(self) -> bool:
+        return self.__reset_if_exists
+
+    @property
+    def json(self, pretty_print: bool = False) -> str:
+        return json.dumps(self.__data, indent=4) if pretty_print else json.dumps(self.__data)
+
+    @staticmethod
+    def from_dict(data: Dict[str, Any]):
+        channel = data.get('channel')
+        reset_if_exists = data.get('reset_if_exists', False)
+        events_to_map = [Event.from_dict(event) for event in data.get('events_to_map')]
+        event_to_post = Event.from_dict(data.get('event_to_post'))
+        return EventMappingData(channel, events_to_map, event_to_post, reset_if_exists)
+
+
+# -------------------------------------------------------------------------------------------------
 
 class EventRegistrationManager:
     __REGISTRANTS_KEY = 'registrants'
@@ -156,6 +199,14 @@ class EventRegistrationManager:
         event_dispatch = EventDispatchManager().event_dispatchers.get(remote_event_data.channel)
         event_dispatch.post_event(remote_event_data.event.name, remote_event_data.event.payload)
 
+    @staticmethod
+    def map_events(event_mapping_data: EventMappingData):
+        if event_mapping_data.channel not in EventDispatchManager().event_dispatchers:
+            EventDispatchManager().add_event_dispatch(event_mapping_data.channel)
+        event_dispatch = EventDispatchManager().event_dispatchers.get(event_mapping_data.channel)
+        event_dispatch.map_events(event_mapping_data.events_to_map, event_mapping_data.event_to_post,
+                                  event_mapping_data.reset_if_exists)
+
     def get_registrant(self, callback_url: str):
         try:
             return self.__registrants[callback_url]
@@ -199,7 +250,7 @@ class EventRegistrationManager:
                 registrants[callback_url][channel] = events
 
         message = '\nCurrent Registrations:\n'
-        if Properties().get('PRETTY_PRINT'):
+        if Properties().has('PRETTY_PRINT') and Properties().get('PRETTY_PRINT'):
             message += json.dumps(registrants, indent=2) + '\n'
         else:
             message += f"{registrants}'\n'"
@@ -252,17 +303,29 @@ class Registration:
 
     def on_event(self, event: Event):
         # Don't propagate event if event originated from destination url.
-        sender_url = event.payload.get('sender_url', '')
-        if sender_url and sender_url in self.__callback_url:
-            return
+        if event.payload:
+            metadata = event.payload.get('metadata', {})
+            if metadata:
+                sender_url = metadata.get('sender_url', '')
+                if sender_url and sender_url in self.__callback_url:
+                    self.__log_message_skipping_post__same_originator(event)
+                    return
 
         remote_event = RemoteEventData(self.__channel, event)
 
         try:
             APICaller.make_post_call(self.__callback_url, json=remote_event.dict,
                                      timeout_sec=self.__client_callback_timeout_sec)
+            self.__log_message_posted_event(event)
         except (ApiConnectionError, InvalidSchema):
             self.__handle_unreachable_client()
+
+    def __log_message_posted_event(self, event: Event):
+        logging.getLogger().debug(f"Posted '{event.name}' to '{self.__callback_url}'")
+
+    def __log_message_skipping_post__same_originator(self, event: Event):
+        logging.getLogger().debug(
+            f"Skipping posting '{event.name}' to '{self.__callback_url}'...destination is originator")
 
     def __get_event_as_list(self) -> [str]:
         return [self.__event] if self.__event else []

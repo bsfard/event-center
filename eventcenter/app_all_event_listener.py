@@ -6,6 +6,7 @@ from flask import Flask
 
 from demo.remote_workers.client_helper import prep_client_app_settings
 from eventcenter import start_event_router, EventRouter
+from eventcenter.client.router import ROUTER_NAME
 
 app: Flask
 
@@ -20,6 +21,8 @@ def main():
     prep_client_app_settings()
 
     is_pretty_print = Properties().get('CLIENT_LOGGING_PRETTY_PRINT')
+
+    Properties().set(ROUTER_NAME, 'All_Event_Listener')
 
     start_event_router()
 

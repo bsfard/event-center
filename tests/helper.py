@@ -31,6 +31,7 @@ def set_properties_for_event_center_interfacing():
     Properties().set('EVENT_CENTER_URL', f'http://localhost:{EVENT_CENTER_PORT}', is_skip_if_exists=True)
     Properties().set('EVENT_CENTER_CALLBACK_HOST', 'http://localhost', is_skip_if_exists=True)
     Properties().set('EVENT_CENTER_CALLBACK_PORT', 9000, is_skip_if_exists=True)
+    Properties().set('FLASK_DEBUG', '1', is_skip_if_exists=True)
 
 
 def register_handler_for_event(handler, event=None, event_dispatch: EventDispatch = None):

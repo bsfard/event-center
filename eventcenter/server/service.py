@@ -1,10 +1,12 @@
 import threading
 
 from eventdispatch import Properties, NamespacedEnum, post_event
+from eventdispatch.core import DuplicateMappingError, InvalidMappingEventsError
 from flask import Flask, request
 
 from eventcenter import FlaskAppRunner
-from eventcenter.server.event_center import EventRegistrationManager, RegistrationData, RemoteEventData
+from eventcenter.server.event_center import EventRegistrationManager, RegistrationData, RemoteEventData, \
+    EventMappingData
 
 RESPONSE_OK = {
     'success': 'true'
@@ -70,6 +72,16 @@ class EventCenterService(FlaskAppRunner):
         def post():
             remote_event_data = RemoteEventData.from_dict(request.json)
             self.__event_registration_manager.post(remote_event_data)
+            return self.make_response(RESPONSE_OK)
+
+        @self.app.route('/map_events', methods=['POST'])
+        def map_events():
+            event_mapping_data = EventMappingData.from_dict(request.json)
+            try:
+                self.__event_registration_manager.map_events(event_mapping_data)
+            except (InvalidMappingEventsError, DuplicateMappingError) as e:
+                RESPONSE_ERROR['error'] = e.message
+                return RESPONSE_ERROR
             return self.make_response(RESPONSE_OK)
 
         # @self.app.route('/track_events', methods=['POST'])

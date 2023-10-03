@@ -2,7 +2,8 @@ import json
 import logging
 import time
 
-from eventdispatch import Event, register_for_events, post_event, NamespacedEnum, Properties, unregister_from_events
+from eventdispatch import Event, register_for_events, post_event, NamespacedEnum, Properties, unregister_from_events, \
+    map_events
 
 STEP_SIM_WORK_SEC = 1
 
@@ -15,6 +16,7 @@ class WorkerEvent(NamespacedEnum):
     STEP2_COMPLETED = 'step2_completed'
     STEP3_COMPLETED = 'step3_completed'
     STEP4_COMPLETED = 'step4_completed'
+    ALL_STEPS_COMPLETED = 'all_steps_completed'
 
     def get_namespace(self) -> str:
         return 'worker'
@@ -117,3 +119,30 @@ class Worker2(Worker):
         self.log_task('step 4')
         self.wait(STEP_SIM_WORK_SEC)
         post_event(WorkerEvent.STEP4_COMPLETED)
+
+
+class Worker3(Worker):
+    events_to_watch = [
+        WorkerEvent.ALL_STEPS_COMPLETED
+    ]
+
+    def __init__(self):
+        super().__init__(self.events_to_watch)
+
+        map_events(
+            events_to_map=[
+                Event(WorkerEvent.STEP1_COMPLETED),
+                Event(WorkerEvent.STEP2_COMPLETED),
+                Event(WorkerEvent.STEP3_COMPLETED),
+                Event(WorkerEvent.STEP4_COMPLETED)
+            ],
+            event_to_post=Event(WorkerEvent.ALL_STEPS_COMPLETED),
+            reset_if_exists=True
+        )
+
+    def on_event(self, event: Event):
+        super().on_event(event)
+
+        if event.name == WorkerEvent.ALL_STEPS_COMPLETED.namespaced_value:
+            # Done (cleanup).
+            self.unregister()
