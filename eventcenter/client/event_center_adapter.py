@@ -11,6 +11,11 @@ from eventcenter.server.event_center import RegistrationData, RemoteEventData, E
 
 CALLBACK_ENDPOINT = '/on_event'
 
+# Event Center properties
+EVENT_CENTER_URL = 'EVENT_CENTER_URL'
+EVENT_CENTER_CALLBACK_HOST = 'EVENT_CENTER_CALLBACK_HOST'
+EVENT_CENTER_CALLBACK_PORT = 'EVENT_CENTER_CALLBACK_PORT'
+
 
 class EventCenterAdapter(FlaskAppRunner):
     def __init__(self, event_handler: Callable):

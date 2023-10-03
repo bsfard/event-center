@@ -11,6 +11,7 @@ setup(
     install_requires=[
         'requests==2.31.0',
         'Flask==2.3.3',
-        'eventdispatch @ git+https://github.com/bsfard/event-dispatch.git@v0.0.6'
+        'gunicorn==21.2.0',
+        'eventdispatch @ git+https://github.com/bsfard/event-dispatch.git'
     ]
 )
