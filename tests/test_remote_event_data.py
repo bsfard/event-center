@@ -1,6 +1,6 @@
 from eventdispatch import Event, Data
 
-from server.event_center import RemoteEventData
+from eventcenter.server.event_center import RemoteEventData
 
 
 def setup_module():
