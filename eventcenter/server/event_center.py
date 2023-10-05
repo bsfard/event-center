@@ -260,10 +260,7 @@ class EventRegistrationManager:
 
     def __handle_unreachable_client(self, event: Event):
         callback_url = event.payload.get('callback_url')
-        channel = event.payload.get('channel', '')
-        event = event.payload.get('event')
-        events = [event] if event else []
-        self.unregister(RegistrationData(callback_url, events, channel))
+        self.unregister_all(callback_url)
 
 
 # -------------------------------------------------------------------------------------------------
@@ -283,32 +280,40 @@ class Registration:
     def __init__(self, callback_url: str, event: str = None, channel: str = ''):
         self.__channel = channel if channel else ''
         self.__callback_url = callback_url
-        self.__event = event
+        self.__event = event or ''
         self.__client_callback_timeout_sec = Properties().get('CLIENT_CALLBACK_TIMEOUT_SEC')
+        self.__is_cancelled = False
 
         # if first registration for channel, add event dispatch for channel.
         if self.__channel not in EventDispatchManager().event_dispatchers:
             EventDispatchManager().add_event_dispatch(self.__channel)
 
-        event_dispatch = EventDispatchManager().event_dispatchers.get(self.__channel)
-        event_dispatch.register(self.on_event, self.__get_event_as_list())
+        self.__event_dispatch = EventDispatchManager().event_dispatchers.get(self.__channel)
+        self.__event_dispatch.register(self.on_event, self.__get_event_as_list())
 
     @property
     def event(self) -> str:
         return self.__event
 
     def cancel(self):
-        event_dispatch = EventDispatchManager().event_dispatchers.get(self.__channel)
-        event_dispatch.unregister(self.on_event, self.__get_event_as_list())
+        if self.__is_cancelled:
+            return
+
+        self.__is_cancelled = True
+        self.__event_dispatch.unregister(self.on_event, self.__get_event_as_list())
 
     def on_event(self, event: Event):
+        if self.__is_cancelled:
+            self.__log_message_skipping_post(event, 'registration_cancelled')
+            return
+
         # Don't propagate event if event originated from destination url.
         if event.payload:
             metadata = event.payload.get('metadata', {})
             if metadata:
                 sender_url = metadata.get('sender_url', '')
                 if sender_url and sender_url in self.__callback_url:
-                    self.__log_message_skipping_post__same_originator(event)
+                    self.__log_message_skipping_post(event, 'destination is originator')
                     return
 
         remote_event = RemoteEventData(self.__channel, event)
@@ -323,9 +328,9 @@ class Registration:
     def __log_message_posted_event(self, event: Event):
         logging.getLogger().debug(f"Posted '{event.name}' to '{self.__callback_url}'")
 
-    def __log_message_skipping_post__same_originator(self, event: Event):
+    def __log_message_skipping_post(self, event: Event, reason: str):
         logging.getLogger().debug(
-            f"Skipping posting '{event.name}' to '{self.__callback_url}'...destination is originator")
+            f"Skipping posting '{event.name}' to '{self.__callback_url}'...{reason}")
 
     def __get_event_as_list(self) -> [str]:
         return [self.__event] if self.__event else []
@@ -333,8 +338,7 @@ class Registration:
     def __handle_unreachable_client(self):
         self.cancel()
 
-        event_dispatch = EventDispatchManager().event_dispatchers.get(self.__channel)
-        event_dispatch.post_event(RegistrationEvent.CALLBACK_FAILED_EVENT.namespaced_value, {
+        self.__event_dispatch.post_event(RegistrationEvent.CALLBACK_FAILED_EVENT.namespaced_value, {
             'channel': self.__channel,
             'callback_url': self.__callback_url,
             'event': self.__event

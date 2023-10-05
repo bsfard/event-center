@@ -260,7 +260,7 @@ def validate_registered_channel_and_event(channel: str = '', event: str = None):
     if event:
         assert reg.event == event
     else:
-        assert reg.event is None
+        assert reg.event is ''
 
 
 def validate_expected_registration_count(channel: str, expected_count):
