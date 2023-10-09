@@ -34,11 +34,12 @@ def main():
 
 
 def on_event(event: Event):
+    header = f'[{event.time_formatted}][#{event.id}]: {event.name}'
     if is_pretty_print:
-        payload = json.dumps(event.dict, indent=2)
+        payload = json.dumps(event.payload, indent=2)
     else:
-        payload = event.dict
-    logging.info(f" Got event '{event.name}'\nPayload:\n{payload}\n")
+        payload = event.payload
+    logging.info(f" Got event:\n{header}\n{payload}\n")
 
 
 if __name__ == '__main__':

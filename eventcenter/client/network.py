@@ -59,7 +59,7 @@ class FlaskAppRunner(threading.Thread):
 
 class APICaller:
     @staticmethod
-    def make_post_call(url: str, data: Dict[str, Any] = None, json: Dict[str, Any] = None,
+    def make_post_call(url: str, data: Dict[str, Any] = None, json: Any = None,
                        headers: Dict[str, Any] = None,
                        session: requests.Session = None,
                        timeout_sec: float = None,
