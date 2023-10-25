@@ -33,6 +33,10 @@ def get_program_args() -> Dict[str, Any]:
                         metavar='',
                         help=f'Your port, reachable by the remote Event Center to send you events')
 
+    parser.add_argument('-raas', '--router_as_a_server',
+                        action='store_true', default=False,
+                        help=f'Launch router as a server.  Use when launching as python or flask app. Do not use if launching as a daemon or via gunicorn')
+
     # This argument is only for demo client apps.
     parser.add_argument('-pp', '--pretty_print',
                         action='store_true', default=False,
@@ -49,6 +53,11 @@ def set_properties(args: Dict[str, Any]):
     Properties().set('EVENT_CENTER_CALLBACK_HOST', args.get('callback_host'))
     Properties().set('EVENT_CENTER_CALLBACK_PORT', args.get('callback_port'))
 
-    Properties().set('FLASK_DEBUG', '1')
+    Properties().set('RUN_AS_A_SERVER', args.get('router_as_a_server'))
+
+    if args.get('router_as_a_server'):
+        print("**** RAAS ON")
+    else:
+        print("**** RAAS OFF")
 
     Properties().set('CLIENT_LOGGING_PRETTY_PRINT', args.get('pretty_print'))

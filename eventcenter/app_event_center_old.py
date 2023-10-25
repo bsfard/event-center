@@ -59,7 +59,7 @@ def set_properties():
     Properties().set('ALLOW_CORS', program_args.get('allow_cors') == '1')
 
     if is_flask_debug:
-        Properties().set('FLASK_DEBUG', '1')
+        Properties().set('RUN_AS_A_SERVER', True)
 
 
 main()

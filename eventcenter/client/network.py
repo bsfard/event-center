@@ -14,6 +14,7 @@ class FlaskAppRunner(threading.Thread):
     def __init__(self, host: str, port: int, app: Flask):
         super().__init__()
         self.is_allow_cors = False
+        self.server = None
 
         try:
             if Properties().has('ALLOW_CORS'):
@@ -36,11 +37,9 @@ class FlaskAppRunner(threading.Thread):
 
     @staticmethod
     def is_flask_debug() -> bool:
-        try:
-            p = Properties().get('FLASK_DEBUG')
-            return p == '1' or p.upper() == 'TRUE' or p.upper() == 'YES'
-        except PropertyNotSetError:
-            return False
+        if Properties().has('RUN_AS_A_SERVER'):
+            return Properties().get('RUN_AS_A_SERVER')
+        return False
 
     def make_response(self, response: Any):
         if self.is_allow_cors:
@@ -53,7 +52,8 @@ class FlaskAppRunner(threading.Thread):
         self.server.serve_forever()
 
     def shutdown(self):
-        self.server.shutdown()
+        if self.server:
+            self.server.shutdown()
         self.logger.debug(f"Stopped flask app '{self.app.name}'")
 
 

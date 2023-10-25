@@ -78,7 +78,12 @@ class Worker1(Worker):
     def do_step1(self):
         self.log_task('step 1')
         self.wait(STEP_SIM_WORK_SEC)
-        post_event(WorkerEvent.STEP1_COMPLETED)
+        post_event(WorkerEvent.STEP1_COMPLETED,
+                   {
+                       'run_id': 56,
+                       'name': 'Donovan',
+                       'time': 100
+                   })
 
     def do_step3(self):
         self.log_task('step 3')
@@ -131,13 +136,18 @@ class Worker3(Worker):
 
         map_events(
             events_to_map=[
-                Event(WorkerEvent.STEP1_COMPLETED),
+                Event(WorkerEvent.STEP1_COMPLETED,
+                      {
+                          'run_id': 56,
+                      }),
                 Event(WorkerEvent.STEP2_COMPLETED),
                 Event(WorkerEvent.STEP3_COMPLETED),
                 Event(WorkerEvent.STEP4_COMPLETED)
             ],
-            event_to_post=Event(WorkerEvent.ALL_STEPS_COMPLETED),
-            reset_if_exists=True
+            event_to_post=Event(WorkerEvent.ALL_STEPS_COMPLETED,
+                                {
+                                    'message': 'hello'
+                                })
         )
 
     def on_event(self, event: Event):
