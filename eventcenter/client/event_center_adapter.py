@@ -8,7 +8,9 @@ from flask import Flask, request
 
 from eventcenter import FlaskAppRunner, APICaller
 from eventcenter.server.event_center import RegistrationData, RemoteEventData, EventMappingData
+from eventcenter.server.service import RESPONSE_OK
 
+PING_ENDPOINT = '/ping'
 CALLBACK_ENDPOINT = '/on_event'
 
 # Event Center properties
@@ -29,10 +31,12 @@ class EventCenterAdapter(FlaskAppRunner):
 
         self.app = Flask('EventCenterAdapter')
 
-        super().__init__('0.0.0.0', port, self.app)
+        super().__init__('0.0.0.0', port, self.app, run_as_a_server=True)
+        self.start()
 
-        if self.is_flask_debug():
-            self.start()
+        @self.app.route(PING_ENDPOINT, methods=['GET'])
+        def ping():
+            return RESPONSE_OK
 
         @self.app.route(CALLBACK_ENDPOINT, methods=['POST'])
         def on_event():

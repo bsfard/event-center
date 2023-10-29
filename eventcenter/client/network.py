@@ -11,11 +11,11 @@ HEADERS = {'Content-Type': 'application/json'}
 
 
 class FlaskAppRunner(threading.Thread):
-    def __init__(self, host: str, port: int, app: Flask):
+    def __init__(self, host: str, port: int, app: Flask, run_as_a_server: bool = False):
         super().__init__()
-        self.is_allow_cors = False
         self.server = None
 
+        self.is_allow_cors = False
         try:
             if Properties().has('ALLOW_CORS'):
                 self.is_allow_cors = Properties().get('ALLOW_CORS') == True
@@ -29,7 +29,7 @@ class FlaskAppRunner(threading.Thread):
         self.logger = logging.getLogger(app.name)
         self.app = app
 
-        if self.is_flask_debug():
+        if run_as_a_server:
             self.server = make_server(host, port, app)
 
         self.ctx = app.app_context()
@@ -48,13 +48,14 @@ class FlaskAppRunner(threading.Thread):
         return response
 
     def run(self):
-        self.logger.debug(f"Starting flask app '{self.app.name}'")
-        self.server.serve_forever()
+        if self.server:
+            self.logger.debug(f"Starting flask app '{self.app.name}'")
+            self.server.serve_forever()
 
     def shutdown(self):
         if self.server:
             self.server.shutdown()
-        self.logger.debug(f"Stopped flask app '{self.app.name}'")
+            self.logger.debug(f"Stopped flask app '{self.app.name}'")
 
 
 class APICaller:

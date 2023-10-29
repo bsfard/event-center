@@ -52,12 +52,5 @@ def set_properties(args: Dict[str, Any]):
     # Properties for setting your host name and port, for remote Event Center to send you events.
     Properties().set('EVENT_CENTER_CALLBACK_HOST', args.get('callback_host'))
     Properties().set('EVENT_CENTER_CALLBACK_PORT', args.get('callback_port'))
-
     Properties().set('RUN_AS_A_SERVER', args.get('router_as_a_server'))
-
-    if args.get('router_as_a_server'):
-        print("**** RAAS ON")
-    else:
-        print("**** RAAS OFF")
-
     Properties().set('CLIENT_LOGGING_PRETTY_PRINT', args.get('pretty_print'))
