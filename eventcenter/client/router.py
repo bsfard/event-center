@@ -1,6 +1,7 @@
+import json
 import logging
 
-from eventdispatch import Event, EventDispatchEvent, register_for_events, Properties, PropertyNotSetError, post_event, \
+from eventdispatch import Event, EventDispatchEvent, register_for_events, Properties, post_event, \
     EventDispatchManager
 from eventdispatch.core import EventMapper
 from flask import Flask
@@ -23,6 +24,7 @@ def stop_event_router():
 # Router properties.
 ROUTER_CHANNEL = 'ROUTER_CHANNEL'
 ROUTER_NAME = 'ROUTER_NAME'
+PRETTY_PRINT = 'PRETTY_PRINT'
 
 
 # -------------------------------------------------------------------------------------------------
@@ -31,21 +33,15 @@ ROUTER_NAME = 'ROUTER_NAME'
 class EventRouter(EventMapper):
     __EXTERNAL_EVENT_ID = 'external_event_id'
     __EXTERNAL_EVENT_TIME = 'external_event_time'
+    __pretty_print = False
 
     __logger = logging.getLogger(__name__)
 
     def __init__(self):
         self.__event_service_adapter = EventCenterAdapter(self.on_external_event)
-        self.__channel = ''
-        self.__name = ''
-        try:
-            if Properties().has(ROUTER_CHANNEL):
-                self.__channel = Properties().get(ROUTER_CHANNEL)
-
-            if Properties().has(ROUTER_NAME):
-                self.__name = Properties().get(ROUTER_NAME)
-        except PropertyNotSetError:
-            pass
+        self.__channel = '' if not Properties().has(ROUTER_CHANNEL) else Properties().get(ROUTER_CHANNEL)
+        self.__name = '' if not Properties().has(ROUTER_NAME) else Properties().get(ROUTER_NAME)
+        EventRouter.__pretty_print = Properties().has(PRETTY_PRINT) and Properties().get(PRETTY_PRINT)
 
         self.__event_service_adapter.unregister_all()
 
@@ -125,9 +121,10 @@ class EventRouter(EventMapper):
 
     @staticmethod
     def __log_message_got_internal_event(event: Event):
-        message = f"Got internal event '{event.name}'"
-        message += f"\n{event.payload}"
-        EventRouter.__logger.debug(message)
+        payload = json.dumps(event.payload, indent=2) if EventRouter.__pretty_print else event.payload
+        message = f"Got internal event '{event.name}'\n{payload}"
+        log_level = logging.ERROR if event.name.endswith('_error') else logging.DEBUG
+        EventRouter.__logger.log(log_level, message)
 
     @staticmethod
     def __log_message_got_external_event(event: Event):
