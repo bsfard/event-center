@@ -7,7 +7,7 @@ from eventdispatch import Data, Event, Properties, NamespacedEnum, register_for_
     EventDispatchManager, PropertyNotSetError
 from requests.exceptions import InvalidSchema
 
-from eventcenter import APICaller, ApiConnectionError
+from eventcenter.client.network import APICaller, ApiConnectionError
 
 
 class RegistrationData(Data):

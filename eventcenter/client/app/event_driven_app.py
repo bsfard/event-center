@@ -7,8 +7,10 @@ from typing import Dict, Any
 
 from eventdispatch import Properties, Event, unregister_from_events, register_for_events
 
-from eventcenter import EVENT_CENTER_URL, EVENT_CENTER_CALLBACK_HOST, EVENT_CENTER_CALLBACK_PORT, stop_event_router, \
-    ROUTER_NAME, start_event_router, ServiceEvent, RUN_AS_A_SERVER
+from eventcenter.client.app.service import ServiceEvent, RUN_AS_A_SERVER
+from eventcenter.client.event_center_adapter import EVENT_CENTER_URL, EVENT_CENTER_CALLBACK_HOST, \
+    EVENT_CENTER_CALLBACK_PORT
+from eventcenter.client.router import start_event_router, stop_event_router, ROUTER_NAME
 
 # Event-Driven App properties
 PRETTY_PRINT = 'PRETTY_PRINT'

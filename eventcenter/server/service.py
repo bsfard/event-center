@@ -4,7 +4,7 @@ from eventdispatch import Properties, NamespacedEnum, post_event
 from eventdispatch.core import DuplicateMappingError, InvalidMappingEventsError
 from flask import Flask, request
 
-from eventcenter import FlaskAppRunner
+from eventcenter.client.network import FlaskAppRunner
 from eventcenter.server.event_center import EventRegistrationManager, RegistrationData, RemoteEventData, \
     EventMappingData
 

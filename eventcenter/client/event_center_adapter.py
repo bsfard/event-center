@@ -6,7 +6,7 @@ from eventdispatch import Event, Properties
 from eventdispatch.core import NotifiableError
 from flask import Flask, request
 
-from eventcenter import FlaskAppRunner, APICaller
+from eventcenter.client.network import FlaskAppRunner, APICaller
 from eventcenter.server.event_center import RegistrationData, RemoteEventData, EventMappingData
 from eventcenter.server.service import RESPONSE_OK
 

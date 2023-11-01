@@ -2,9 +2,10 @@ import logging
 import threading
 from typing import Dict, Any
 
-from eventcenter import FlaskAppRunner
 from eventdispatch import Properties, NamespacedEnum, post_event
 from flask import Flask
+
+from eventcenter.client.network import FlaskAppRunner
 
 # Service properties.
 SERVICE_PORT = 'SERVICE_PORT'
