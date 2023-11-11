@@ -20,7 +20,7 @@ def main():
 
     prep_client_app_settings()
 
-    is_pretty_print = Properties().get('CLIENT_LOGGING_PRETTY_PRINT')
+    is_pretty_print = Properties().get('PRETTY_PRINT')
 
     Properties().set(ROUTER_NAME, 'All_Event_Listener')
 

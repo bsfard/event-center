@@ -72,18 +72,18 @@ class RemoteEventData(Data):
 # -------------------------------------------------------------------------------------------------
 
 class EventMappingData(Data):
-    def __init__(self, channel: str, events_to_map: [Event], event_to_post: Event, reset_if_exists: bool = False):
+    def __init__(self, channel: str, events_to_map: [Event], event_to_post: Event, ignore_if_exists: bool = False):
         super().__init__({
             'channel': channel if channel else '',
             'events_to_map': [event.dict for event in events_to_map],
             'event_to_post': event_to_post.dict,
-            'reset_if_exists': reset_if_exists
+            'ignore_if_exists': ignore_if_exists
         })
 
         self.__channel = channel
         self.__events_to_map = events_to_map
         self.__event_to_post = event_to_post
-        self.__reset_if_exists = reset_if_exists
+        self.__ignore_if_exists = ignore_if_exists
 
     @property
     def channel(self) -> str:
@@ -98,8 +98,8 @@ class EventMappingData(Data):
         return self.__event_to_post
 
     @property
-    def reset_if_exists(self) -> bool:
-        return self.__reset_if_exists
+    def ignore_if_exists(self) -> bool:
+        return self.__ignore_if_exists
 
     @property
     def json(self, pretty_print: bool = False) -> str:
@@ -108,10 +108,10 @@ class EventMappingData(Data):
     @staticmethod
     def from_dict(data: Dict[str, Any]):
         channel = data.get('channel')
-        reset_if_exists = data.get('reset_if_exists', False)
+        ignore_if_exists = data.get('ignore_if_exists', False)
         events_to_map = [Event.from_dict(event) for event in data.get('events_to_map')]
         event_to_post = Event.from_dict(data.get('event_to_post'))
-        return EventMappingData(channel, events_to_map, event_to_post, reset_if_exists)
+        return EventMappingData(channel, events_to_map, event_to_post, ignore_if_exists)
 
 
 # -------------------------------------------------------------------------------------------------
@@ -123,6 +123,9 @@ class EventRegistrationManager:
         self.__registrants = {}
         self.__lock = threading.Lock()
         self.__registrants_file_path = Properties().get('REGISTRANTS_FILE_PATH')
+
+        if Properties().has('PRETTY_PRINT') and Properties().get('PRETTY_PRINT'):
+            EventDispatchManager(pretty_print=True)
 
         # Register to get notified if clients are unreachable, to take action.
         register_for_events(self.on_event, [RegistrationEvent.CALLBACK_FAILED_EVENT])
@@ -204,8 +207,8 @@ class EventRegistrationManager:
         if event_mapping_data.channel not in EventDispatchManager().event_dispatchers:
             EventDispatchManager().add_event_dispatch(event_mapping_data.channel)
         event_dispatch = EventDispatchManager().event_dispatchers.get(event_mapping_data.channel)
-        event_dispatch.map_events(event_mapping_data.events_to_map, event_mapping_data.event_to_post,
-                                  event_mapping_data.reset_if_exists)
+        return event_dispatch.map_events(event_mapping_data.events_to_map, event_mapping_data.event_to_post,
+                                         event_mapping_data.ignore_if_exists)
 
     def get_registrant(self, callback_url: str):
         try:

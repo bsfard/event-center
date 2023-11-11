@@ -1,9 +1,8 @@
 from eventdispatch import Properties
+from eventdispatch.demo import Worker1
 
 from client_helper import prep_client_app_settings
-from demo.workers import Worker1
-from eventcenter import start_event_router
-from eventcenter.client.router import ROUTER_NAME
+from eventcenter.client.router import start_event_router, ROUTER_NAME
 
 prep_client_app_settings()
 

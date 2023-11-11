@@ -2,8 +2,8 @@ import logging
 import time
 
 from eventdispatch import post_event
-
-from demo.workers import Worker1, Worker2, WorkerEvent
+from eventdispatch.demo import Worker1, Worker2
+from eventdispatch.demo.workers import WorkerEvent
 
 logging.basicConfig(level=logging.INFO)
 

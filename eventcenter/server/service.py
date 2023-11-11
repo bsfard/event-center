@@ -78,11 +78,14 @@ class EventCenterService(FlaskAppRunner):
         def map_events():
             event_mapping_data = EventMappingData.from_dict(request.json)
             try:
-                self.__event_registration_manager.map_events(event_mapping_data)
+                response = {
+                    'event_map_key': self.__event_registration_manager.map_events(event_mapping_data)
+                }
+                response.update(RESPONSE_OK)
+                return self.make_response(response)
             except (InvalidMappingEventsError, DuplicateMappingError) as e:
                 RESPONSE_ERROR['error'] = e.message
                 return RESPONSE_ERROR
-            return self.make_response(RESPONSE_OK)
 
         # @self.app.route('/track_events', methods=['POST'])
         # def watch():

@@ -17,7 +17,7 @@ log_level = os.environ.get('EC_LOG_DEBUG', '1')
 # Check flask run level from environment ('1' == DEBUG, otherwise INFO).
 run_as_a_server = os.environ.get('RUN_AS_A_SERVER', '0')
 
-logging.basicConfig(level=logging.DEBUG if log_level == '1' else logging.INFO)
+logging.getLogger().setLevel(level=logging.DEBUG if log_level == '1' else logging.INFO)
 
 
 def main():

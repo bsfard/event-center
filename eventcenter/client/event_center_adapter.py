@@ -70,16 +70,22 @@ class EventCenterAdapter(FlaskAppRunner):
         data = RemoteEventData(channel, event)
         APICaller.make_post_call(url, json=data.dict, is_suppress_connection_error=True)
 
-    def map_events(self, events_to_map: [Event], event_to_post: Event, reset_if_exists: bool = False,
-                   channel: str = ''):
+    def map_events(self, events_to_map: [Event], event_to_post: Event, ignore_if_exists: bool = False,
+                   channel: str = '') -> str:
         url = self.event_center_url + '/map_events'
 
-        data = EventMappingData(channel, events_to_map, event_to_post, reset_if_exists)
+        data = EventMappingData(channel, events_to_map, event_to_post, ignore_if_exists)
         response = APICaller.make_post_call(url, json=data.dict, is_suppress_connection_error=True)
+
+        if not response:
+            EventCenterAdapter.__log_message_no_response()
+            raise EventCenterConnectionError()
+
         response = response.json()
 
         if response.get('success', 'false') == 'true':
             EventCenterAdapter.__log_message_map_events_succeeded(data)
+            return response['event_map_key']
         else:
             error = response.get('error', '(no error message provided')
             raise EventMappingError(error)
@@ -87,6 +93,11 @@ class EventCenterAdapter(FlaskAppRunner):
     @staticmethod
     def __log_message_map_events_succeeded(event_mapping_data: EventMappingData):
         logging.getLogger().debug(f"Mapped events\n{event_mapping_data.dict}")
+
+    @staticmethod
+    def __log_message_no_response():
+        logging.getLogger().error(f'No response after API call to Event Center. Make sure Event Center is running '
+                                  f'and connectivity information provided is correct.')
 
     def __register(self, events: [str], channel: str, is_register: bool = True):
         endpoint = '/register' if is_register else '/unregister'
@@ -102,4 +113,13 @@ class EventMappingError(NotifiableError):
         payload = {
             'reason': reason,
         }
+        super().__init__(message, error, payload)
+
+
+class EventCenterConnectionError(NotifiableError):
+    def __init__(self):
+        message = f"Could not connect to Event Center. Make sure Event Center is running " \
+                  f"and connectivity information provided is correct."
+        error = 'event_center_connection_error'
+        payload = {}
         super().__init__(message, error, payload)

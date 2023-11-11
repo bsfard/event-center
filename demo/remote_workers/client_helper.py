@@ -53,4 +53,4 @@ def set_properties(args: Dict[str, Any]):
     Properties().set('EVENT_CENTER_CALLBACK_HOST', args.get('callback_host'))
     Properties().set('EVENT_CENTER_CALLBACK_PORT', args.get('callback_port'))
     Properties().set('RUN_AS_A_SERVER', args.get('router_as_a_server'))
-    Properties().set('CLIENT_LOGGING_PRETTY_PRINT', args.get('pretty_print'))
+    Properties().set('PRETTY_PRINT', args.get('pretty_print'))

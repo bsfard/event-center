@@ -15,5 +15,5 @@ export EC_LOG_DEBUG=1     # =1            : log DEBUG messages to console
                           # <>1, (unset)  : log INFO messages to console
                           
 cd eventcenter
-PYTHONPATH=../ gunicorn -w 4 -b 0.0.0.0:$EC_PORT eventcenter.app_event_center:app
+PYTHONPATH=../ gunicorn -w 1 -b 0.0.0.0:$EC_PORT eventcenter.app_event_center:app
 ```

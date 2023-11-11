@@ -55,8 +55,8 @@ class EventRouter(EventMapper):
     def server(self) -> Flask:
         return self.__event_service_adapter.app
 
-    def map_events(self, events_to_map: [Event], event_to_post: Event, reset_if_exists: bool = False):
-        self.__event_service_adapter.map_events(events_to_map, event_to_post, reset_if_exists, self.__channel)
+    def map_events(self, events_to_map: [Event], event_to_post: Event, ignore_if_exists: bool = False) -> str:
+        return self.__event_service_adapter.map_events(events_to_map, event_to_post, ignore_if_exists, self.__channel)
 
     @synchronized
     def on_internal_event(self, event: Event):
