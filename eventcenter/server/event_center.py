@@ -5,6 +5,7 @@ from typing import Dict, Any
 
 from eventdispatch import Data, Event, Properties, NamespacedEnum, register_for_events, \
     EventDispatchManager, PropertyNotSetError
+from eventdispatch import EventMapUtil
 from requests.exceptions import InvalidSchema
 
 from eventcenter.client.network import APICaller, ApiConnectionError
@@ -209,6 +210,18 @@ class EventRegistrationManager:
         event_dispatch = EventDispatchManager().event_dispatchers.get(event_mapping_data.channel)
         return event_dispatch.map_events(event_mapping_data.events_to_map, event_mapping_data.event_to_post,
                                          event_mapping_data.ignore_if_exists)
+
+    @staticmethod
+    def get_event_maps(channel: str = '') -> Dict[str, Any]:
+        event_dispatch = EventDispatchManager().event_dispatchers.get(channel, None)
+        return event_dispatch.get_event_maps() if event_dispatch else {}
+
+    @staticmethod
+    def pack_event_maps(event_maps: Dict[str, Any]) -> Dict[str, Any]:
+        maps = {}
+        for key, event_map in event_maps.items():
+            maps[key] = EventMapUtil.build_event_mapping_payload(event_map.events_to_map, event_map.event_to_post)
+        return maps
 
     def get_registrant(self, callback_url: str):
         try:

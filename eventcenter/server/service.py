@@ -87,6 +87,17 @@ class EventCenterService(FlaskAppRunner):
                 RESPONSE_ERROR['error'] = e.message
                 return RESPONSE_ERROR
 
+        @self.app.route('/event_maps', methods=['GET'])
+        def event_maps():
+            channel = request.json['channel']
+            maps = self.__event_registration_manager.get_event_maps(channel)
+            response = {
+                'channel': channel,
+                'event_maps': self.__event_registration_manager.pack_event_maps(maps)
+            }
+            response.update(RESPONSE_OK)
+            return self.make_response(response)
+
         # @self.app.route('/track_events', methods=['POST'])
         # def watch():
         #     request.json
