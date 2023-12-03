@@ -40,8 +40,8 @@ class Service(FlaskAppRunner):
 
     def __init__(self, name: str = 'Service', run_as_a_server: bool = False):
         self.app = Flask(name)
-        raas = run_as_a_server or Properties().get(RUN_AS_A_SERVER)
-        port = Properties().get(SERVICE_PORT)
+        raas = run_as_a_server or (Properties().has(RUN_AS_A_SERVER) and Properties().get(RUN_AS_A_SERVER))
+        port = Properties().get(SERVICE_PORT) if Properties().has(SERVICE_PORT) else 0
         super().__init__('0.0.0.0', port, self.app, raas)
 
         self.start()

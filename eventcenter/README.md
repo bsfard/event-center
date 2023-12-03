@@ -7,7 +7,6 @@
 ### Launch Event Center
 
 ```shell
-
 # Set environment variables.
 export EC_PORT=6000       # set event center port
 
