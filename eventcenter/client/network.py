@@ -70,17 +70,38 @@ class APICaller:
         try:
             if session:
                 if timeout_sec:
-                    response = session.post(url, data=data, json=json, headers=headers, timeout=timeout_sec)
+                    return session.post(url, data=data, json=json, headers=headers, timeout=timeout_sec)
                 else:
-                    response = session.post(url, data=data, json=json, headers=headers)
+                    return session.post(url, data=data, json=json, headers=headers)
             else:
                 if timeout_sec:
-                    response = requests.post(url, data=data, json=json, headers=headers, timeout=timeout_sec)
+                    return requests.post(url, data=data, json=json, headers=headers, timeout=timeout_sec)
                 else:
-                    response = requests.post(url, data=data, json=json, headers=headers)
+                    return requests.post(url, data=data, json=json, headers=headers)
 
-            APICaller.__validate_response_ok(url, response)
-            return response
+        except requests.exceptions.ConnectionError:
+            if not is_suppress_connection_error:
+                raise ApiConnectionError(url, data, json)
+
+    @staticmethod
+    def make_patch_call(url: str, data: Dict[str, Any] = None, json: Any = None,
+                       headers: Dict[str, Any] = None,
+                       session: requests.Session = None,
+                       timeout_sec: float = None,
+                       is_suppress_connection_error: bool = False) -> requests.Response:
+        headers = headers if headers else HEADERS
+
+        try:
+            if session:
+                if timeout_sec:
+                    return session.patch(url, data=data, json=json, headers=headers, timeout=timeout_sec)
+                else:
+                    return session.patch(url, data=data, json=json, headers=headers)
+            else:
+                if timeout_sec:
+                    return requests.patch(url, data=data, json=json, headers=headers, timeout=timeout_sec)
+                else:
+                    return requests.patch(url, data=data, json=json, headers=headers)
 
         except requests.exceptions.ConnectionError:
             if not is_suppress_connection_error:
@@ -94,25 +115,46 @@ class APICaller:
         params = APICaller.__remove_empty_params(params)
         try:
             if session:
-                response = session.get(url, params=params, headers=headers)
+                return session.get(url, params=params, headers=headers)
             else:
-                response = requests.get(url, params=params, headers=headers)
-
-            APICaller.__validate_response_ok(url, response)
-            return response
+                return requests.get(url, params=params, headers=headers)
 
         except requests.exceptions.ConnectionError:
             if not is_suppress_connection_error:
                 raise ApiConnectionError(url, {}, {})
 
     @staticmethod
+    def make_delete_call(url: str, data: Dict[str, Any] = None, json: Any = None,
+                       headers: Dict[str, Any] = None,
+                       session: requests.Session = None,
+                       timeout_sec: float = None,
+                       is_suppress_connection_error: bool = False) -> requests.Response:
+        headers = headers if headers else HEADERS
+
+        try:
+            if session:
+                if timeout_sec:
+                    return session.delete(url, data=data, json=json, headers=headers, timeout=timeout_sec)
+                else:
+                    return session.delete(url, data=data, json=json, headers=headers)
+            else:
+                if timeout_sec:
+                    return requests.delete(url, data=data, json=json, headers=headers, timeout=timeout_sec)
+                else:
+                    return requests.delete(url, data=data, json=json, headers=headers)
+
+        except requests.exceptions.ConnectionError:
+            if not is_suppress_connection_error:
+                raise ApiConnectionError(url, data, json)
+
+    @staticmethod
     def __remove_empty_params(params):
         return {key: value for (key, value) in params.items() if value}
 
-    @staticmethod
-    def __validate_response_ok(url: str, response):
-        if response.status_code != 200:
-            raise BadResponseStatusError(url, response)
+
+def validate_response(url: str, response: requests.Response, expected_status_code: int):
+    if response.status_code != expected_status_code:
+        raise BadResponseStatusError(url, response)
 
 
 class ApiConnectionError(NotifiableError):
