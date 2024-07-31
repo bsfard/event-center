@@ -1,8 +1,18 @@
 requests==2.31.0
-Flask==2.3.3
-Werkzeug==2.3.7
+#Flask==2.3.3
+#Werkzeug==2.3.7
+Flask==3.0.3
+werkzeug==3.0.3
 gunicorn==21.2.0
 wrapt==1.16.0
+
+# To support websockets (for monitoring router events)
+#flask-cors==4.0.1
+#Flask-SocketIO==5.3.6
+#eventlet==0.36.1
+#gevent==24.2.1
+#gevent-websocket==0.10.1
+
 
 # eventdispatch@ git+https://github.com/bsfard/event-dispatch.git@v0.0.6
 eventdispatch@ git+https://github.com/bsfard/event-dispatch.git

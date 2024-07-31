@@ -113,7 +113,7 @@ def test_on_internal_event__when_non_registration_event(mocker):
     event_router.on_internal_event(event)
 
     # Verify
-    mock_call.assert_called_with(event, test_channel)
+    mock_call.assert_called_with(event, test_channel, is_suppress_connection_error=False)
 
 
 def test_on_external_event():

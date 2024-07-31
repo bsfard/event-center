@@ -85,10 +85,10 @@ class APICaller:
 
     @staticmethod
     def make_patch_call(url: str, data: Dict[str, Any] = None, json: Any = None,
-                       headers: Dict[str, Any] = None,
-                       session: requests.Session = None,
-                       timeout_sec: float = None,
-                       is_suppress_connection_error: bool = False) -> requests.Response:
+                        headers: Dict[str, Any] = None,
+                        session: requests.Session = None,
+                        timeout_sec: float = None,
+                        is_suppress_connection_error: bool = False) -> requests.Response:
         headers = headers if headers else HEADERS
 
         try:
@@ -125,10 +125,10 @@ class APICaller:
 
     @staticmethod
     def make_delete_call(url: str, data: Dict[str, Any] = None, json: Any = None,
-                       headers: Dict[str, Any] = None,
-                       session: requests.Session = None,
-                       timeout_sec: float = None,
-                       is_suppress_connection_error: bool = False) -> requests.Response:
+                         headers: Dict[str, Any] = None,
+                         session: requests.Session = None,
+                         timeout_sec: float = None,
+                         is_suppress_connection_error: bool = False) -> requests.Response:
         headers = headers if headers else HEADERS
 
         try:
