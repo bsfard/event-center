@@ -1,6 +1,6 @@
 # event-center
 
-TODO: (Description)
+Router and remote event center for bridging internal app events (using [event-dispatch](https://github.com/bsfard/event-dispatch) for local events) with external systems.
 
 ## Key points
 
